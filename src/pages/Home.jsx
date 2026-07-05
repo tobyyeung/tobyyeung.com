@@ -11,6 +11,7 @@ import { useBreakpoints } from '../hooks/useBreakpoints';
 import { getPositionForDate, getBasePositionForDate } from '../utils/timelineUtils';
 import { useInView } from '../hooks/useInView';
 import ScrollIndicator from '../components/ScrollIndicator';
+import HeroVisual from '../components/HeroVisual';
 
 const Home = () => {
   const [projects, setProjects] = useState([]);
@@ -227,12 +228,17 @@ const Home = () => {
           alignItems: 'center', 
           padding: '8rem 0',
           position: 'relative',
-          '--hero-bg-img': `url(${import.meta.env.BASE_URL}images/landingpage.jpg)`,
-          '--hero-bg-img-light': `url(${import.meta.env.BASE_URL}images/landingpage-light.png)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
         }}>
+          {/* Animated background image */}
+          <div className="hero-bg-flow dark-overlay" style={{
+            backgroundImage: `url(${import.meta.env.BASE_URL}images/landingpage.jpg)`,
+          }} />
+          {/* Light mode variant — handled via CSS [data-theme='light'] selector on the same element */}
+          <style>{`
+            [data-theme='light'] .hero-bg-flow {
+              background-image: url(${import.meta.env.BASE_URL}images/landingpage-light.png) !important;
+            }
+          `}</style>
           <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap-reverse', gap: '4rem', position: 'relative', zIndex: 11 }}>
           {/* Text Content */}
           <div style={{ flex: '1 1 500px' }}>
@@ -252,7 +258,7 @@ const Home = () => {
               <span className="cursor-blink" style={{ opacity: isTyping ? 1 : 0.7 }}>|</span>
             </p>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <a href="mailto:tobycyeung@gmail.com" className="btn btn-primary">Email Me</a>
+              <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="btn btn-primary" style={{ fontSize: '1.1rem' }}>Contact Me</button>
               <a href="https://github.com/tobyyeung" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ padding: '0.75rem' }} aria-label="GitHub">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.02c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A4.8 4.8 0 0 0 8 18v4"></path></svg>
               </a>
@@ -264,54 +270,7 @@ const Home = () => {
 
           {/* Image Content */}
           <div style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'center' }}>
-            {/* Camera Body */}
-            <div style={{ 
-              position: 'relative', 
-              width: '100%', 
-              maxWidth: '450px', 
-              aspectRatio: '3/2', 
-              borderRadius: '32px', 
-              background: 'linear-gradient(145deg, rgba(20, 30, 50, 0.8), #040812)', 
-              border: '2px solid rgba(255, 255, 255, 0.1)', 
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.1)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center' 
-            }}>
-              
-              {/* Shutter Button */}
-              <div style={{ position: 'absolute', top: '-12px', right: '40px', width: '45px', height: '12px', borderRadius: '6px 6px 0 0', background: 'linear-gradient(to bottom, #444, #222)', border: '2px solid rgba(255, 255, 255, 0.1)', borderBottom: 'none' }} />
-              
-              {/* Camera Dial */}
-              <div style={{ position: 'absolute', top: '-8px', right: '100px', width: '35px', height: '8px', borderRadius: '4px 4px 0 0', background: '#333', border: '1px solid #111', borderBottom: 'none', backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)' }} />
-
-              {/* Flash */}
-              <div style={{ position: 'absolute', top: '25px', left: '30px', width: '50px', height: '25px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 'inset 0 0 15px rgba(255, 255, 255, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: '80%', height: '40%', background: 'rgba(255, 255, 255, 0.8)', borderRadius: '2px', boxShadow: '0 0 10px rgba(255,255,255,0.5)' }} />
-              </div>
-
-              {/* Red Recording Dot */}
-              <div style={{ position: 'absolute', top: '30px', right: '35px', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 10px var(--danger)', animation: 'blink 2s infinite' }} />
-
-              {/* Camera Lens Outer Ring */}
-              <div style={{ position: 'relative', width: '65%', aspectRatio: '1/1', borderRadius: '50%', padding: '12px', background: 'linear-gradient(135deg, #333, #111)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 15px 35px rgba(0,0,0,0.6)' }}>
-                
-                {/* Accent Gradient Ring */}
-                <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '4px', background: 'var(--accent-gradient)' }}>
-                  
-                  {/* Deep Inner Lens Barrel */}
-                  <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', border: '8px solid #050505', overflow: 'hidden', background: '#000', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.9)' }}>
-                    
-                    {/* Lens Glare Reflection */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.05) 100%)', borderRadius: '50%', pointerEvents: 'none', zIndex: 10 }} />
-                    
-                    {/* The Photo */}
-                    <img className="camera-pan" src={import.meta.env.BASE_URL + "images/self.jpg"} alt="Toby Yeung" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
-                  </div>
-                </div>
-              </div>
-
-            </div>
+            <HeroVisual />
           </div>
         </div>
       </section>
