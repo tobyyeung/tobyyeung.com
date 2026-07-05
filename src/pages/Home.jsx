@@ -238,7 +238,7 @@ const Home = () => {
           <div style={{ flex: '1 1 500px' }}>
             <h1 style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '1.5rem', lineHeight: '1.1' }}>
               <span style={{ fontSize: '2.5rem', color: 'var(--text-primary)', fontWeight: '500' }}>Hi, I'm</span>
-              <span className="cyber-text glitch-hover" style={{ 
+              <span className="moving-gradient-hover" style={{ 
                 fontSize: '5.5rem', 
                 display: 'inline-block', 
                 width: 'fit-content',
