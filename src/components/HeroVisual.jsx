@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const COMMAND = 'start https://tobyyeung.github.io/web/';
+const COMMAND = 'start https://tobyyeung.com/';
 const TYPE_SPEED = 55;
 const PAUSE_AFTER_CMD = 500;
 const WEBSITE_SHOW_DURATION = 2500;
@@ -173,7 +173,7 @@ const HeroVisual = () => {
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28c840' }} />
               </div>
               <div style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: '6px', padding: '3px 10px', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontFamily: "'Inter', sans-serif", overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                <span style={{ color: 'rgba(255,255,255,0.3)' }}>🔒 </span>tobyyeung.github.io/web/
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}>🔒 </span>tobyyeung.com/
               </div>
             </div>
             <div style={{ flex: 1, background: 'linear-gradient(180deg, #0e1a30 0%, #0A1325 100%)', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden', position: 'relative' }}>

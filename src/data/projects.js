@@ -15,7 +15,7 @@ export const initialProjects = [
     shortDescription: "A streamlined Chrome Extension for instantly adding recurring birthdays to Google Calendar.",
     description: "Birthday Blitz is a fast, lightweight <strong>Chrome Extension</strong> built with <strong>JavaScript</strong> and <strong>HTML/CSS</strong> that integrates directly with the <strong>Google Calendar API</strong>. Designed to ensure you never forget a birthday again, it utilizes secure <strong>OAuth 2.0</strong> authentication via Chrome Identity to fetch and manage a user's calendars. The extension enables users to quickly input a name and birthdate to automatically generate and sync recurring yearly events directly to their selected calendar.",
     technologies: ["JavaScript", "HTML/CSS", "Chrome Extension API", "Google Calendar API", "OAuth 2.0"],
-    websiteUrl: "https://tobyyeung.github.io/birthdayblitz/",
+    websiteUrl: "https://tobyyeung.com/birthdayblitz/",
     githubUrl: "https://github.com/tobyyeung/birthdayblitz",
     imageUrl: import.meta.env.BASE_URL + "images/projects/birthdayblitz.png"
   },
