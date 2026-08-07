@@ -8,6 +8,7 @@ const ExperienceCard = ({
   hoveredExpId,
   setHoveredExpId,
   topPx,
+  idealTopPx,
   xShift,
   dotWidth,
   dotHeight,
@@ -16,7 +17,8 @@ const ExperienceCard = ({
   borderGlassColor,
   cardRef,
   animationIndex,
-  isVisible
+  isVisible,
+  onLearnMore
 }) => {
   // Format duration string
   const duration = Math.max(1, (exp.endY - exp.startY) * 12 + (exp.endM - exp.startM));
@@ -26,6 +28,9 @@ const ExperienceCard = ({
   if (yrs > 0) durStr += `${yrs} yr${yrs > 1 ? 's' : ''} `;
   if (mos > 0 || yrs === 0) durStr += `${mos} mo${mos > 1 ? 's' : ''}`;
 
+  // Spine line position anchored to ideal date position on central spine
+  const spineTopPx = (!isMobileTimeline && idealTopPx !== undefined) ? (idealTopPx - topPx + 16) : 16;
+
   return (
     <div
       className={isVisible ? 'animate-experience' : ''}
@@ -34,23 +39,21 @@ const ExperienceCard = ({
         top: isMobileTimeline ? 'auto' : `${topPx}px`,
         width: isMobileTimeline ? 'calc(100% - 4.5rem)' : 'calc(50% - 2.5rem)',
         ...(isMobileTimeline ? { left: '4.0rem' } : { [renderAsLeft ? 'left' : 'right']: 0 }),
-        zIndex: hoveredExpId === exp.id ? 100 : (exp.overlapOffset ? 10 : 20),
+        zIndex: hoveredExpId === exp.id ? 40 : 20,
         display: 'flex',
         flexDirection: 'column',
         alignItems: renderAsLeft ? 'flex-end' : 'flex-start',
-        transition: isMobileTimeline ? 'none' : 'top 0.3s ease-in-out',
+        transition: isMobileTimeline ? 'none' : 'top 0.15s ease-out',
         opacity: isVisible ? undefined : 0,
         animationDelay: isVisible ? `${animationIndex * 250}ms` : '0ms'
       }}
-      onMouseEnter={() => setHoveredExpId(exp.id)}
-      onMouseLeave={() => setHoveredExpId(null)}
     >
       <div style={{ position: 'relative', width: '100%' }}>
-        {/* The Timeline Dot */}
+        {/* Timeline Dot & Line on Spine */}
         <div
           style={{
             position: 'absolute',
-            top: '1.1rem',
+            top: isMobileTimeline ? '1.1rem' : `${spineTopPx}px`,
             width: isMobileTimeline ? '0.75rem' : dotWidth,
             height: isMobileTimeline ? '0.75rem' : `${dotHeight}px`,
             borderRadius: '999px',
@@ -58,112 +61,125 @@ const ExperienceCard = ({
             border: `2px solid var(--bg-primary)`,
             boxShadow: `0 0 0 2px var(--border-glass)`,
             [renderAsLeft ? 'right' : 'left']: isMobileTimeline ? '-2.75rem' : dotOffset,
-            transition: isMobileTimeline ? 'none' : 'top 0.3s ease-in-out, height 0.3s ease-in-out'
+            transition: isMobileTimeline ? 'none' : 'top 0.15s ease-out, height 0.15s ease-out',
+            zIndex: 1
           }}
         ></div>
 
-        {/* Timeline Card Container */}
+        {/* Timeline Card */}
         <div
           ref={cardRef}
           className="glass-panel"
+          onMouseEnter={() => setHoveredExpId(exp.id)}
+          onMouseLeave={() => setHoveredExpId(null)}
+          onClick={() => onLearnMore && onLearnMore(exp)}
           style={{
             width: '100%',
-            padding: '0.85rem 1rem',
-            borderRadius: '12px',
-            transition: 'transform 0.2s ease',
+            padding: '1rem 1.15rem',
+            borderRadius: '16px',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             textAlign: renderAsLeft ? 'right' : 'left',
             position: 'relative',
-            transform: `translateX(${xShift}) ${hoveredExpId === exp.id ? 'translateY(-5px)' : ''}`,
-            border: `1px solid ${borderGlassColor}`,
-            boxShadow: hoveredExpId === exp.id ? `0 8px 30px ${borderGlassColor}` : 'none'
+            transform: `translateX(${xShift}) ${hoveredExpId === exp.id ? 'translateY(-4px)' : ''}`,
+            border: `1px solid ${hoveredExpId === exp.id ? accentColor : borderGlassColor}`,
+            boxShadow: hoveredExpId === exp.id ? `0 12px 32px ${borderGlassColor}` : 'var(--shadow-sm)',
+            cursor: 'pointer'
           }}
         >
-          {/* Card Content */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: windowWidth < 500 ? '0.25rem' : '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {/* Header row: logo + date & title info */}
             <div style={{
               display: 'flex',
               flexDirection: windowWidth < 500
-                ? 'column'  /* phone: logo stacked on top */
+                ? 'column'
                 : (renderAsLeft ? 'row-reverse' : 'row'),
-              alignItems: windowWidth < 500 ? (renderAsLeft ? 'flex-end' : 'flex-start') : 'center',
-              gap: '0.6rem'
+              alignItems: windowWidth < 500 ? (renderAsLeft ? 'flex-end' : 'flex-start') : 'flex-start',
+              gap: '0.75rem'
             }}>
-              <div style={{ background: '#ffffff', padding: '0.2rem', borderRadius: '6px', width: 'clamp(24px, 4vw, 36px)', height: 'clamp(24px, 4vw, 36px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {/* Logo */}
+              <div style={{
+                background: '#ffffff',
+                padding: '0.25rem',
+                borderRadius: '8px',
+                width: '38px',
+                height: '38px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                boxShadow: 'var(--shadow-sm)',
+                marginTop: '0.1rem'
+              }}>
                 <img src={exp.logo} alt={`${exp.title} Logo`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
               </div>
+
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: renderAsLeft ? 'flex-end' : 'flex-start', minWidth: 0, width: '100%' }}>
-                {/* Mobile: Date to the right of title/role. Desktop: Date on top. */}
-                {windowWidth < 650 ? (
-                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                      <h3 style={{ fontSize: 'clamp(0.7rem, 1.2vw, 1.05rem)', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0.1rem 0 0', wordBreak: 'break-word' }}>{exp.title}</h3>
-                      <h4 style={{ fontSize: 'clamp(0.65rem, 1vw, 0.9rem)', fontWeight: '600', color: 'var(--text-secondary)', margin: 0, wordBreak: 'break-word' }}>{exp.role}</h4>
-                    </div>
-                    <span style={{ fontSize: '0.6rem', fontWeight: 'bold', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right', whiteSpace: 'nowrap', marginTop: '0.2rem', flexShrink: 0 }}>
-                      {exp.dateStr}
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    <span style={{ fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)', fontWeight: 'bold', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {exp.dateStr}{windowWidth >= 850 && ` • ${durStr.trim()}`}
-                    </span>
-                    <h3 style={{ fontSize: 'clamp(0.7rem, 1.2vw, 1.05rem)', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0.1rem 0 0', wordBreak: 'break-word' }}>{exp.title}</h3>
-                    <h4 style={{ fontSize: 'clamp(0.65rem, 1vw, 0.9rem)', fontWeight: '600', color: 'var(--text-secondary)', margin: 0, wordBreak: 'break-word' }}>{exp.role}</h4>
-                  </>
-                )}
+                {/* Date & Learn More Button on the same row */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
+                  flexDirection: renderAsLeft ? 'row-reverse' : 'row',
+                  gap: '0.5rem',
+                  marginBottom: '0.15rem'
+                }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {exp.dateStr}{windowWidth >= 850 && ` • ${durStr.trim()}`}
+                  </span>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onLearnMore) onLearnMore(exp);
+                    }}
+                    className="btn btn-secondary"
+                    style={{
+                      fontSize: '0.73rem',
+                      padding: '0.22rem 0.65rem',
+                      borderRadius: '9999px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      color: accentColor,
+                      borderColor: borderGlassColor,
+                      background: 'var(--bg-glass)',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0
+                    }}
+                  >
+                    Learn More
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </div>
+
+                <h3 style={{ fontSize: '1.02rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0 0 0.1rem', wordBreak: 'break-word', lineHeight: '1.25' }}>
+                  {exp.role}
+                </h3>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-secondary)', margin: 0, wordBreak: 'break-word' }}>
+                  {exp.title}
+                </h4>
               </div>
             </div>
 
-            {/* Short description — always visible ≥650px, hover-only below */}
-            <div style={{
-              maxHeight: windowWidth >= 650 || hoveredExpId === exp.id ? '300px' : '0px',
-              opacity: windowWidth >= 650 || hoveredExpId === exp.id ? 1 : 0,
-              overflow: 'hidden',
-              transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.3s ease-in-out',
-              marginTop: windowWidth >= 650 || hoveredExpId === exp.id ? '0.2rem' : '0'
+            {/* Short Description */}
+            <p style={{
+              fontSize: '0.85rem',
+              color: 'var(--text-secondary)',
+              margin: '0.1rem 0 0',
+              lineHeight: '1.45',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
             }}>
-              <p style={{ fontSize: 'clamp(0.65rem, 0.9vw, 0.82rem)', color: 'var(--text-primary)', marginBottom: '0', lineHeight: '1.35' }}>
-                {exp.shortDesc}
-              </p>
-            </div>
-
-            {/* Bullet Points */}
-            <div style={{
-              maxHeight: hoveredExpId === exp.id ? '400px' : '0px',
-              opacity: hoveredExpId === exp.id ? 1 : 0,
-              overflow: 'hidden',
-              transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.3s ease-in-out',
-              marginTop: hoveredExpId === exp.id ? '0.6rem' : '0'
-            }}>
-              <ul style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.4rem',
-                fontSize: 'clamp(0.65rem, 0.9vw, 0.8rem)',
-                color: 'var(--text-secondary)',
-                listStyleType: 'none',
-                paddingLeft: renderAsLeft ? '0' : '1.25rem',
-                paddingRight: renderAsLeft ? '1.25rem' : '0',
-                textAlign: renderAsLeft ? 'right' : 'left'
-              }}>
-                {exp.bullets.map((bullet, idx) => (
-                  <li key={idx} style={{ position: 'relative' }}>
-                    {renderAsLeft ? (
-                      <>
-                        <span style={{ position: 'absolute', right: '-1.25rem', color: accentColor }}>•</span>
-                        <span dangerouslySetInnerHTML={{ __html: bullet }} />
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ position: 'absolute', left: '-1.25rem', color: accentColor }}>•</span>
-                        <span dangerouslySetInnerHTML={{ __html: bullet }} />
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              {exp.shortDesc}
+            </p>
           </div>
         </div>
       </div>

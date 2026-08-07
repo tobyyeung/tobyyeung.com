@@ -252,16 +252,6 @@ button {
 .moving-gradient-hover {
   color: var(--accent-primary);
   display: inline-block;
-  transition: color 0.3s ease;
-}
-
-.moving-gradient-hover:hover {
-  background: linear-gradient(to right, #ff003c, #0088ff, #ff003c);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradientPan 3s linear infinite;
 }
 
 @keyframes flowTexture {
@@ -389,7 +379,12 @@ button {
   animation: blink 1s step-end infinite;
   display: inline-block;
   margin-left: 2px;
-  color: var(--accent-primary);
+  color: #3AC5A3;
+}
+
+[data-theme='light'] #hero .hero-name-title,
+[data-theme='light'] #hero .cursor-blink {
+  color: #3AC5A3 !important;
 }
 
 .gradient-text {
@@ -487,15 +482,40 @@ button {
 }
 
 .btn-primary {
-  background: var(--accent-gradient);
-  color: #1f2937;
+  background: #3AC5A3;
+  color: #0A1325;
   box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-  background: var(--accent-gradient-hover);
-  box-shadow: var(--shadow-glow);
+  background: #34b393;
+  color: #0A1325;
+  box-shadow: 0 0 20px rgba(58, 197, 163, 0.4);
   transform: translateY(-2px);
+}
+
+[data-theme='light'] .btn-primary {
+  background: #3AC5A3 !important;
+  color: #0A1325 !important;
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme='light'] .btn-primary:hover {
+  background: #2ea88b !important;
+  color: #0A1325 !important;
+  box-shadow: 0 0 20px rgba(58, 197, 163, 0.4) !important;
+}
+
+[data-theme='light'] #contact .btn-primary {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3) !important;
+}
+
+[data-theme='light'] #contact .btn-primary:hover {
+  background: #4338ca !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.5) !important;
 }
 
 .btn-tertiary {
@@ -728,4 +748,333 @@ button {
   100% {
     transform: scale(1) translate(0, 0);
   }
+}
+
+/* ==========================================
+   REDESIGNED HEADER — Pill Nav Tabs
+   ========================================== */
+
+.header-logo-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.header-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #ffffff;
+  padding: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header-logo-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.header-logo-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.header-logo-subtitle {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.03em;
+}
+
+/* Header Hover Tooltips */
+.header-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-tooltip-wrapper .tooltip-text {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: var(--bg-glass, rgba(10, 19, 37, 0.95));
+  border: 1px solid var(--border-glass, rgba(58, 197, 163, 0.3));
+  color: var(--text-primary, #ffffff);
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 1000;
+}
+
+.header-tooltip-wrapper .tooltip-text::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 6px;
+  height: 6px;
+  background: var(--bg-glass, rgba(10, 19, 37, 0.95));
+  border-left: 1px solid var(--border-glass, rgba(58, 197, 163, 0.3));
+  border-top: 1px solid var(--border-glass, rgba(58, 197, 163, 0.3));
+}
+
+.header-tooltip-wrapper:hover .tooltip-text {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.pill-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-full);
+  padding: 0.2rem;
+}
+
+[data-theme='light'] .pill-nav {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.pill-nav-link {
+  position: relative;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pill-nav-link:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='light'] .pill-nav-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pill-nav-link.active {
+  color: var(--text-primary);
+  background: rgba(58, 197, 163, 0.12);
+}
+
+[data-theme='light'] .pill-nav-link.active {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* Bracket indicators on active pill */
+.pill-nav-link.active::before,
+.pill-nav-link.active::after {
+  color: var(--accent-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.pill-nav-link.active::before {
+  content: "[";
+  margin-right: 0.15rem;
+}
+
+.pill-nav-link.active::after {
+  content: "]";
+  margin-left: 0.15rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 8px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-icon-btn:hover {
+  color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-glass);
+}
+
+/* ==========================================
+   AVAILABILITY BADGE
+   ========================================== */
+
+.availability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(58, 197, 163, 0.3);
+  background: rgba(58, 197, 163, 0.08);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  letter-spacing: 0.03em;
+  margin-bottom: 1.5rem;
+}
+
+[data-theme='light'] .availability-badge {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--accent-primary);
+}
+
+.availability-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+  50% { opacity: 0.7; box-shadow: 0 0 16px rgba(16, 185, 129, 0.9); }
+}
+
+/* ==========================================
+   EXPERIENCE CARD — Toggle / Tags / Bullets
+   ========================================== */
+
+.exp-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  transition: color 0.2s ease;
+  letter-spacing: 0.02em;
+}
+
+.exp-toggle-btn:hover {
+  color: var(--accent-primary);
+}
+
+.exp-toggle-arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 0.65rem;
+}
+
+.exp-toggle-arrow.open {
+  transform: rotate(180deg);
+}
+
+.exp-bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.exp-bullet-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--accent-primary);
+}
+
+.exp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.exp-tag {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.03em;
+}
+
+[data-theme='light'] .exp-tag {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes expModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes expModalSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.custom-map-pin img {
+  width: 22px !important;
+  height: 22px !important;
+  max-width: 22px !important;
+  max-height: 22px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.leaflet-container {
+  background: var(--bg-primary, #0A1325) !important;
+}
+
+.leaflet-tile-container img {
+  filter: brightness(0.9) contrast(1.1) saturate(0.9) !important;
 }
