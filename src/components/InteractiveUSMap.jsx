@@ -233,7 +233,7 @@ const InteractiveUSMap = ({ onSelectExperience, decorative = false }) => {
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Create Leaflet Map Instance
+    // Create Leaflet Map Instance (preferCanvas: false to prevent Safari WebKit black box rendering bug)
     const map = L.map(mapContainerRef.current, {
       center: US_CENTER,
       zoom: US_ZOOM,
@@ -245,7 +245,7 @@ const InteractiveUSMap = ({ onSelectExperience, decorative = false }) => {
       keyboard: !decorative,
       touchZoom: !decorative,
       boxZoom: false,
-      preferCanvas: true,
+      preferCanvas: false,
       fadeAnimation: true,
       zoomAnimation: true
     });
@@ -384,7 +384,9 @@ const InteractiveUSMap = ({ onSelectExperience, decorative = false }) => {
       background: 'transparent',
       border: 'none',
       boxShadow: 'none',
-      pointerEvents: decorative ? 'none' : 'auto'
+      pointerEvents: decorative ? 'none' : 'auto',
+      WebkitBackfaceVisibility: 'hidden',
+      WebkitTransform: 'translate3d(0,0,0)'
     }}>
       {/* Leaflet Map Canvas */}
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%', zIndex: 1 }} />
