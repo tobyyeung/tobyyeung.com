@@ -4,7 +4,7 @@ import ProjectModal from '../components/ProjectModal';
 import ExperienceCard from '../components/ExperienceCard';
 import ExperienceModal from '../components/ExperienceModal';
 import EducationCard from '../components/EducationCard';
-import InteractiveUSMap from '../components/InteractiveUSMap';
+import GoogleUSMap from '../components/GoogleUSMap';
 import { getProjects } from '../data/projects';
 import { experiences, TIMELINE_START_YEAR, TIMELINE_START_MONTH } from '../data/experiences';
 import { uiucCourses, ucsdCourses } from '../data/education';
@@ -192,7 +192,7 @@ const Home = () => {
             backgroundImage: `url(${import.meta.env.BASE_URL}images/landingpage.jpg)`,
             display: 'none'
           }} />
-          {/* Decorative Map Background */}
+          {/* Decorative Google Map Background */}
           <div style={{
             position: 'absolute',
             top: 0,
@@ -203,7 +203,7 @@ const Home = () => {
             opacity: 0.7,
             pointerEvents: 'none'
           }}>
-            <InteractiveUSMap decorative />
+            <GoogleUSMap decorative />
           </div>
           {/* Light mode variant — handled via CSS [data-theme='light'] selector on the same element */}
           <style>{`
