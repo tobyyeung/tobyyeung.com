@@ -1,38 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const NAV_SECTIONS = [
-  { id: 'hero', label: 'About', desc: 'Overview & Bio' },
+  { id: 'hero', label: 'Home', desc: 'Skyline & Overview' },
+  { id: 'about', label: 'About', desc: 'Overview & Bio' },
   { id: 'experience', label: 'Experience', desc: 'Career & Work History' },
   { id: 'projects', label: 'Projects', desc: 'Featured Applications' },
+  { id: 'education', label: 'Education', desc: 'Universities & Degrees' },
   { id: 'skills', label: 'Skills', desc: 'Technologies & Tools' },
   { id: 'contact', label: 'Contact', desc: 'Send a Message' },
 ];
 
-const Header = ({ theme, toggleTheme }) => {
+const Header = () => {
   const location = useLocation();
-  const { isTablet: isMobile, windowWidth } = useBreakpoints();
+  const { isTablet: isMobile } = useBreakpoints();
   const [activeSection, setActiveSection] = useState('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Track active section & scroll state position
+  // Precise active section detection based on viewport position
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 40);
 
-      const header = document.querySelector('header');
-      const headerOffset = header ? header.offsetHeight : 0;
-      const scrollY = window.scrollY + headerOffset + 80;
+      // 1. Bottom of page threshold -> activate contact
+      const isAtBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 70;
+      if (isAtBottom) {
+        setActiveSection('contact');
+        return;
+      }
 
-      for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
-        const el = document.getElementById(NAV_SECTIONS[i].id);
-        if (el && el.offsetTop <= scrollY) {
-          setActiveSection(NAV_SECTIONS[i].id);
-          break;
+      // 2. Top Skyline / Home check (before about section reaches upper viewport)
+      const aboutEl = document.getElementById('about');
+      const header = document.querySelector('header');
+      const headerHeight = header ? header.offsetHeight : 70;
+      const anchorY = window.innerHeight * 0.38;
+
+      if (aboutEl) {
+        const aboutRect = aboutEl.getBoundingClientRect();
+        if (aboutRect.top > anchorY) {
+          setActiveSection('hero');
+          return;
+        }
+      } else if (window.scrollY < 250) {
+        setActiveSection('hero');
+        return;
+      }
+
+      // 3. Check each section from bottom to top
+      const sectionsInOrder = ['contact', 'skills', 'education', 'projects', 'experience', 'about'];
+      for (const sectionId of sectionsInOrder) {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // Check if top has scrolled past anchor line and bottom is still visible
+          if (rect.top <= anchorY && rect.bottom > headerHeight + 20) {
+            setActiveSection(sectionId);
+            return;
+          }
         }
       }
+
+      setActiveSection('hero');
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -44,22 +75,30 @@ const Header = ({ theme, toggleTheme }) => {
     setIsMenuOpen(false);
     setActiveSection(id);
 
+    if (id === 'hero') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      return;
+    }
+
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
         const header = document.querySelector('header');
-        const headerOffset = header ? header.offsetHeight : 0;
+        const headerHeight = header ? header.offsetHeight : 70;
         const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 12;
 
         window.scrollTo({
-          top: offsetPosition,
+          top: Math.max(0, offsetPosition),
           behavior: 'smooth'
         });
       } else if (location.pathname !== '/') {
         window.location.href = '/#/';
       }
-    }, 50);
+    }, 40);
   };
 
   return (
@@ -87,10 +126,10 @@ const Header = ({ theme, toggleTheme }) => {
               />
               <div className="header-logo-text" style={{ textAlign: 'left', alignItems: 'flex-start' }}>
                 <span className="header-logo-name" style={{ textAlign: 'left' }}>Toby Yeung</span>
-                <span className="header-logo-subtitle" style={{ textAlign: 'left' }}>Software Engineer</span>
+                <span className="header-logo-subtitle" style={{ textAlign: 'left' }}>Computer Science + Economics @ UIUC</span>
               </div>
             </button>
-            <span className="tooltip-text">Back to Home</span>
+            <span className="tooltip-text">Back to Top</span>
           </div>
 
           {isMobile ? (
@@ -100,13 +139,9 @@ const Header = ({ theme, toggleTheme }) => {
                 <a href="https://github.com/tobyyeung" target="_blank" rel="noopener noreferrer" className="header-icon-btn" aria-label="GitHub">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.02c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A4.8 4.8 0 0 0 8 18v4"></path></svg>
                 </a>
-                <button onClick={toggleTheme} className="header-icon-btn" aria-label="Toggle theme">
-                  {theme === 'dark' ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                  )}
-                </button>
+                <a href="https://www.linkedin.com/in/yeung-toby/" target="_blank" rel="noopener noreferrer" className="header-icon-btn" aria-label="LinkedIn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                </a>
               </div>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -131,7 +166,7 @@ const Header = ({ theme, toggleTheme }) => {
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              {/* Pill Nav */}
+              {/* Pill Nav with Home and About buttons */}
               <nav className="pill-nav">
                 {NAV_SECTIONS.map(section => (
                   <button
@@ -144,7 +179,7 @@ const Header = ({ theme, toggleTheme }) => {
                 ))}
               </nav>
 
-              {/* Right-side icons */}
+              {/* Right-side icons (GitHub & LinkedIn) */}
               <div className="header-actions">
                 <div className="header-tooltip-wrapper">
                   <a href="https://github.com/tobyyeung" target="_blank" rel="noopener noreferrer" className="header-icon-btn" aria-label="GitHub">
@@ -157,16 +192,6 @@ const Header = ({ theme, toggleTheme }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                   </a>
                   <span className="tooltip-text">LinkedIn Profile</span>
-                </div>
-                <div className="header-tooltip-wrapper">
-                  <button onClick={toggleTheme} className="header-icon-btn" aria-label="Toggle theme">
-                    {theme === 'dark' ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                    )}
-                  </button>
-                  <span className="tooltip-text">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                 </div>
               </div>
             </div>

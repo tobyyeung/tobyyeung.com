@@ -2,19 +2,19 @@ export const initialProjects = [
   {
     id: "1",
     title: "Aleago",
-    shortDescription: "A dynamic web application powering a unique virtual economy using deterministic probability models.",
-    description: "Aleago is a high-performance web application built with <strong>Next.js</strong>, <strong>React</strong>, and <strong>Supabase</strong> that powers a unique virtual economy and robust digital marketplace. I designed the architecture to execute complex deterministic probability models and transactional logic using highly scalable <strong>serverless edge functions</strong>. The backend is structured with asynchronous, highly-concurrent <strong>PostgreSQL</strong> pipelines, meticulously crafted to seamlessly handle millions of mathematical value-matching algorithms and concurrent requests in real-time.",
-    technologies: ["Next.js", "React", "Supabase", "PostgreSQL", "Tailwind CSS", "Vercel"],
-    websiteUrl: "https://aleago.vercel.app/",
+    shortDescription: "A Next.js/Supabase platform deployed on Vercel with deterministic probability models and async PostgreSQL pipelines.",
+    description: "Aleago is a high-performance <strong>Next.js</strong> and <strong>Supabase</strong> platform deployed on <strong>Vercel</strong>, implementing deterministic probability models and server-side validation to prevent client-side state manipulation. I designed asynchronous <strong>PostgreSQL</strong> data pipelines to process high-frequency stochastic events and synchronize real-time application state across concurrent sessions.",
+    technologies: ["Next.js", "React", "Supabase", "PostgreSQL", "Vercel", "TypeScript", "Tailwind CSS"],
+    websiteUrl: "https://aleago.tobyyeung.com",
     githubUrl: "https://github.com/tobyyeung/aleago",
     imageUrl: import.meta.env.BASE_URL + "images/projects/aleago.png"
   },
   {
     id: "2",
     title: "Birthday Blitz",
-    shortDescription: "A streamlined Chrome Extension for instantly adding recurring birthdays to Google Calendar.",
-    description: "Birthday Blitz is a fast, lightweight <strong>Chrome Extension</strong> built with <strong>JavaScript</strong> and <strong>HTML/CSS</strong> that integrates directly with the <strong>Google Calendar API</strong>. Designed to ensure you never forget a birthday again, it utilizes secure <strong>OAuth 2.0</strong> authentication via Chrome Identity to fetch and manage a user's calendars. The extension enables users to quickly input a name and birthdate to automatically generate and sync recurring yearly events directly to their selected calendar.",
-    technologies: ["JavaScript", "HTML/CSS", "Chrome Extension API", "Google Calendar API", "OAuth 2.0"],
+    shortDescription: "A Manifest V3 Chrome extension automating one-click creation of recurring Google Calendar events via OAuth 2.0.",
+    description: "Birthday Blitz is a <strong>Manifest V3 Chrome extension</strong> developed using <strong>JavaScript</strong> to automate one-click creation of recurring Google Calendar events. I implemented authentication with <strong>chrome.identity</strong>, including token caching, session management, and automated credential revocation, and integrated the <strong>Google Calendar API v3</strong> to generate and modify RFC 5545 iCalendar recurrence rules and handle timezone offsets.",
+    technologies: ["JavaScript", "Chrome Extension (Manifest V3)", "Google Calendar API v3", "chrome.identity", "OAuth 2.0", "RFC 5545 iCalendar"],
     websiteUrl: "https://chromewebstore.google.com/detail/birthday-blitz/kmgkppagkcdodaddflajjdhkmbpgcaag",
     githubUrl: "https://github.com/tobyyeung/birthdayblitz",
     imageUrl: import.meta.env.BASE_URL + "images/projects/birthdayblitz.png"
@@ -22,10 +22,10 @@ export const initialProjects = [
   {
     id: "3",
     title: "Tacho Tasks",
-    shortDescription: "A task management platform bidirectionally synchronizing events across Google Calendar and Google Tasks.",
-    description: "Tacho Tasks is a comprehensive, productivity-boosting task management platform designed to unify and streamline your daily scheduling. I developed a custom, high-efficiency two-pronged sync engine powered by <strong>Node.js</strong> and <strong>WebSockets</strong> that seamlessly integrates with the <strong>Google Workspace API</strong> using secure <strong>OAuth 2.0</strong> authentication. This enables real-time, bidirectional synchronization of events and to-dos across both <strong>Google Calendar</strong> and <strong>Google Tasks</strong>, seamlessly surfaced through a highly responsive <strong>React</strong> frontend and robust <strong>REST APIs</strong>.",
-    technologies: ["React", "Node.js", "Express", "REST APIs", "Google Workspace API", "OAuth 2.0", "WebSockets"],
-    websiteUrl: "",
+    shortDescription: "An Electron desktop application bidirectionally synchronizing Firebase Firestore and Google Calendar via OAuth 2.0 PKCE.",
+    description: "Tacho Tasks is an <strong>Electron</strong> desktop application built using <strong>JavaScript/TypeScript</strong>, separating UI renderers from background processes through <strong>IPC</strong>. I engineered bidirectional synchronization between <strong>Firebase Firestore</strong> and <strong>Google Calendar</strong> using <strong>OAuth 2.0 PKCE</strong> and <strong>REST APIs</strong>, including automatic token refresh and credential management. It integrates <strong>chrono-node</strong> to convert natural-language date expressions into structured task schedules for automated calendar management.",
+    technologies: ["Electron", "TypeScript", "JavaScript", "Firebase Firestore", "Google Calendar API", "OAuth 2.0 PKCE", "chrono-node", "IPC", "REST APIs"],
+    websiteUrl: "https://tasks.tobyyeung.com",
     githubUrl: "https://github.com/tobyyeung/tachotasks",
     imageUrl: import.meta.env.BASE_URL + "images/projects/tacho.png"
   },

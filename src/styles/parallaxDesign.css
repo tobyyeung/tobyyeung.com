@@ -1,0 +1,978 @@
+/* ==========================================================================
+   PARALLAX RETRO-CYBER DESIGN SYSTEM (Inspired by r4ms3s.cz)
+   Tailored for Toby Yeung with a Deep Space Obsidian & Cyber Teal/Cyan Palette
+   ========================================================================== */
+
+/* ─── Global Base & Reset for Parallax Sections ─────────────────────────── */
+.parallax-page {
+  width: 100%;
+  position: relative;
+  background: #020716;
+  color: #ffffff;
+  overflow-x: clip;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Noise overlay */
+.noise-bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+  z-index: 999;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Container */
+.parallax-container {
+  position: relative;
+  margin: 0 auto;
+  padding-left: clamp(24px, 5vw, 60px);
+  padding-right: clamp(24px, 5vw, 60px);
+  max-width: 1320px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ─── Glitch Typography ─────────────────────────────────────────────────── */
+.glitch-typo,
+.glitch-typo-second {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.glitch-typo:hover,
+.glitch-typo-second:hover {
+  text-decoration: none;
+}
+
+.glitch-typo:before,
+.glitch-typo-second:before,
+.glitch-typo:after,
+.glitch-typo-second:after {
+  content: attr(data-title);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 1;
+  transition: all 0.2s ease-in-out;
+  pointer-events: none;
+}
+
+.glitch-typo:before {
+  color: #3AC5A3;
+}
+.glitch-typo:after {
+  color: #38bdf8;
+}
+
+.glitch-typo-second:before {
+  color: #00f0ff;
+}
+.glitch-typo-second:after {
+  color: #a855f7;
+}
+
+.glitch-typo:hover:before,
+.glitch-typo-second:hover:before {
+  animation: glitch-anim 1.8s 0.1s cubic-bezier(0, 0.82, 1, 0.42) both;
+}
+
+.glitch-typo:hover:after,
+.glitch-typo-second:hover:after {
+  animation: glitch-anim 1.8s 0.2s cubic-bezier(0, 0.82, 1, 0.42) reverse both;
+}
+
+.glitch-typo:hover span,
+.glitch-typo-second:hover span {
+  animation: glitch-scale 0.4s ease-in-out forwards;
+}
+
+.glitch-typo span,
+.glitch-typo-second span {
+  position: relative;
+  display: inline-block;
+  z-index: 2;
+  transition: all 0.2s ease-in-out;
+}
+
+@keyframes glitch-anim {
+  0% { transform: translate(0); opacity: 0; }
+  15% { transform: translate(-3px, 2px); opacity: 0.8; }
+  30% { transform: translate(4px, -2px); opacity: 0.5; }
+  45% { transform: translate(-2px, -3px); opacity: 0.7; }
+  60% { transform: translate(3px, 1px); opacity: 0.9; }
+  75% { transform: translate(-1px, 2px); opacity: 0.4; }
+  100% { transform: translate(0); opacity: 0; }
+}
+
+@keyframes glitch-scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1.04); }
+}
+
+/* ─── Parallax Header & Sky ─────────────────────────────────────────────── */
+.header-placeholder {
+  height: 200vh;
+  position: relative;
+  width: 100%;
+}
+
+.parallax-header {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 30%, #071329 0%, #030816 70%, #020716 100%);
+  overflow: hidden;
+  z-index: 5;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out;
+}
+
+.parallax-header-content {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  max-width: 2000px;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+/* Title & Logo */
+.parallax-header-title {
+  position: absolute;
+  left: 0;
+  top: 36%;
+  width: 100%;
+  text-align: center;
+  z-index: 3;
+  pointer-events: auto;
+  transition: transform 0.1s ease-out, opacity 0.2s ease-out;
+}
+
+.parallax-title-main {
+  font-family: 'Oswald', 'Outfit', sans-serif;
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(58, 197, 163, 0.4);
+}
+
+.parallax-title-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.9rem, 2vw, 1.25rem);
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #3AC5A3;
+  margin-top: 0.75rem;
+  opacity: 0.95;
+}
+
+.parallax-title-tags {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.parallax-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(10, 25, 47, 0.75);
+  border: 1px solid rgba(58, 197, 163, 0.35);
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+}
+
+/* Stars */
+.parallax-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.star-geo {
+  position: absolute;
+  background: #3AC5A3;
+  opacity: 0.6;
+  border-radius: 2px;
+  animation: star-twinkle 4s infinite ease-in-out alternate;
+}
+
+@keyframes star-twinkle {
+  0% { opacity: 0.2; transform: scale(0.8) rotate(45deg); }
+  50% { opacity: 0.9; transform: scale(1.3) rotate(45deg); box-shadow: 0 0 8px #3AC5A3; }
+  100% { opacity: 0.3; transform: scale(0.9) rotate(45deg); }
+}
+
+/* Shooting Stars */
+.shooting-stars {
+  position: absolute;
+  inset: 0;
+  transform: rotateZ(28deg);
+  pointer-events: none;
+}
+
+.shooting-star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(-45deg, #3AC5A3, #00f0ff, transparent);
+  filter: drop-shadow(0 0 8px #3AC5A3);
+  animation: star-tail 10s ease-in-out infinite, star-shooting 10s ease-in-out infinite;
+}
+
+@keyframes star-tail {
+  0%, 10% { width: 0; }
+  20% { width: 120px; }
+  100% { width: 0; }
+}
+
+@keyframes star-shooting {
+  0%, 10% { transform: translateX(0); opacity: 0; }
+  12% { opacity: 1; }
+  22% { transform: translateX(450px); opacity: 0; }
+  100% { transform: translateX(450px); opacity: 0; }
+}
+
+/* ─── Isometric Architectural Buildings (Parallax Layers) ──────────────── */
+.house-layer {
+  position: absolute;
+  top: 100%;
+  height: 2000px;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.house-layer svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ─── 3D Cyber Room Section ────────────────────────────────────────────── */
+.room-section {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  background: #020716;
+  margin-top: -2px;
+}
+
+.room-top {
+  position: relative;
+  width: 100%;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.room-top svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.room-content {
+  position: relative;
+  width: 100%;
+  max-width: 1280px;
+  margin: -15% auto 0;
+  padding: 0 20px;
+  z-index: 12;
+}
+
+.room-content svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.8));
+}
+
+/* ─── Main Content Section (Coder / Portfolio Articles) ─────────────────── */
+.section-coder {
+  position: relative;
+  width: 100%;
+  background: #020716;
+  z-index: 15;
+  padding-bottom: 0;
+}
+
+/* ─── Blurry Gradient Transition: Bottom of About ("Hey! I'm Toby") ─── */
+.about-bottom-blurry-transition {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.about-bottom-blurry-transition .blur-backdrop {
+  position: absolute;
+  inset: -4px 0 0 0;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 50%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 50%, black 100%);
+}
+
+.about-bottom-blurry-transition .color-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(2, 7, 22, 0.4) 40%,
+    rgba(2, 7, 22, 0.85) 75%,
+    #020716 100%
+  );
+}
+
+/* ─── Blurry Gradient Transition: Top of Map / Experience Section ─── */
+.about-map-blurry-transition {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  height: 110px;
+  pointer-events: none;
+  z-index: 12;
+  overflow: hidden;
+}
+
+.about-map-blurry-transition .blur-backdrop {
+  position: absolute;
+  inset: -4px 0 0 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.8) 35px,
+    rgba(0, 0, 0, 0.25) 70px,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    rgba(0, 0, 0, 0.8) 35px,
+    rgba(0, 0, 0, 0.25) 70px,
+    transparent 100%
+  );
+}
+
+.about-map-blurry-transition .color-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #020716 0%,
+    rgba(2, 7, 22, 0.95) 30px,
+    rgba(2, 7, 22, 0.6) 65px,
+    rgba(2, 7, 22, 0.15) 90px,
+    transparent 100%
+  );
+}
+
+.section-coder article {
+  padding: clamp(100px, 12vw, 180px) 0;
+  border-top: none !important;
+  border-bottom: none !important;
+  position: relative;
+}
+
+.section-coder article:first-of-type {
+  border-top: none !important;
+}
+
+/* Article Left Column (Heading + Number) */
+.article-heading-col {
+  position: relative;
+  float: left;
+  width: 440px;
+}
+
+.article-heading {
+  font-family: 'Oswald', 'Outfit', sans-serif;
+  font-size: clamp(2.4rem, 4.2vw, 3.85rem);
+  line-height: 1.05;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.article-heading strong {
+  color: #3AC5A3;
+  font-weight: 700;
+}
+
+/* ─── Cyber Decrypt Heading Animation ───────────────────────────────────── */
+.cyber-decrypt-heading {
+  user-select: none;
+  transition: text-shadow 0.2s ease;
+}
+
+.glyph-scrambling {
+  color: #00f0ff;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.8), 0 0 20px rgba(0, 240, 255, 0.4);
+  display: inline-block;
+  min-width: 0.52em;
+  text-align: center;
+  font-family: 'Oswald', monospace, sans-serif;
+  opacity: 0.9;
+}
+
+.glyph-resolved {
+  color: #ffffff;
+  display: inline-block;
+  min-width: 0.52em;
+  text-align: center;
+  animation: glyphDecryptedSnap 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glyph-name-scrambling {
+  color: #3AC5A3;
+  text-shadow: 0 0 14px rgba(58, 197, 163, 0.9), 0 0 24px rgba(58, 197, 163, 0.5);
+  display: inline-block;
+  min-width: 0.52em;
+  text-align: center;
+  font-family: 'Oswald', monospace, sans-serif;
+}
+
+.glyph-name-resolved {
+  color: #3AC5A3;
+  display: inline-block;
+  min-width: 0.52em;
+  text-align: center;
+  animation: glyphDecryptedSnap 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cyber-decrypt-cursor {
+  display: inline-block;
+  margin-left: 8px;
+  color: #3AC5A3;
+  font-size: 0.72em;
+  vertical-align: baseline;
+  animation: cyberCursorFlicker 0.45s infinite alternate ease-in-out;
+  text-shadow: 0 0 10px #3AC5A3;
+}
+
+.glyph-p-scrambling {
+  color: #00f0ff;
+  opacity: 0.85;
+  font-family: monospace;
+  font-size: 0.95em;
+  text-shadow: 0 0 6px rgba(0, 240, 255, 0.6);
+}
+
+.glyph-p-resolved {
+  display: inline;
+}
+
+.glyph-hover-scrambling {
+  color: #00f0ff;
+  text-shadow: 0 0 8px #00f0ff, 0 0 14px rgba(0, 240, 255, 0.7);
+  font-family: monospace;
+  font-weight: 600;
+  display: inline-block;
+  cursor: default;
+  transform: translateY(-1px) scale(1.1);
+  transition: transform 0.1s ease;
+}
+
+.cyber-decrypt-paragraph {
+  user-select: text;
+  transition: opacity 0.2s ease;
+}
+
+@keyframes glyphDecryptedSnap {
+  0% {
+    transform: scale(1.22);
+    filter: brightness(2);
+    color: #00f0ff;
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes cyberCursorFlicker {
+  0% { opacity: 0.15; transform: scaleY(0.85); }
+  100% { opacity: 1; transform: scaleY(1); }
+}
+
+.article-number {
+  position: absolute;
+  left: 0;
+  top: -70px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #3AC5A3;
+  opacity: 0.25;
+  letter-spacing: 3px;
+}
+
+/* Article Right Column (Content / Descriptions) */
+.article-content-col {
+  margin-left: 480px;
+  width: auto;
+}
+
+/* ─── Modern Flex/Sticky Layout for 2-Column Sections ──────────────────── */
+.section-flex-container {
+  display: flex !important;
+  gap: clamp(30px, 5vw, 64px);
+  align-items: flex-start;
+}
+
+.section-sticky-header {
+  position: sticky !important;
+  top: 130px;
+  flex: 0 0 clamp(240px, 25vw, 340px) !important;
+  float: none !important;
+  width: auto !important;
+  z-index: 5;
+}
+
+.section-flex-content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+.section-flex-reverse {
+  flex-direction: row-reverse !important;
+}
+
+.section-flex-reverse .section-sticky-header {
+  text-align: right;
+}
+
+.section-flex-reverse .section-sticky-header .article-number {
+  left: auto;
+  right: 0;
+}
+
+.article-text {
+  font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+  line-height: 1.65;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 24px;
+}
+
+.article-text strong {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.article-text .highlight {
+  color: #3AC5A3;
+  font-weight: 600;
+}
+
+/* ─── Experience Items ─────────────────────────────────────────────────── */
+.experience-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.experience-card-item {
+  position: relative;
+  display: block;
+  background: rgba(10, 19, 37, 0.6);
+  border: 1px solid rgba(58, 197, 163, 0.18);
+  border-radius: 12px;
+  padding: 24px 28px;
+  text-decoration: none;
+  overflow: hidden;
+  transition: all 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+.experience-card-item:hover {
+  background: rgba(10, 24, 47, 0.9);
+  border-color: #3AC5A3;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(58, 197, 163, 0.15);
+  transform: translateY(-3px);
+}
+
+.exp-date-badge {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3AC5A3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.exp-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.exp-title-text {
+  font-family: 'Oswald', 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exp-title-text span.role {
+  color: #a0a0ab;
+  font-weight: 400;
+  font-size: 1.15rem;
+}
+
+.exp-arrow-icon {
+  width: 22px;
+  height: 22px;
+  color: #3AC5A3;
+  transition: transform 0.2s ease;
+}
+
+.experience-card-item:hover .exp-arrow-icon {
+  transform: translateX(4px) translateY(-2px);
+}
+
+.exp-desc-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: 16px;
+}
+
+.exp-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.exp-tag-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #3AC5A3;
+  background: rgba(58, 197, 163, 0.08);
+  border: 1px solid rgba(58, 197, 163, 0.25);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ─── Works Grid (Mosaic Layout with Depth Previews) ────────────────────── */
+.works-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.works-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.work-item-card {
+  position: relative;
+  display: block;
+  background: #070e1c;
+  border: 1px solid rgba(58, 197, 163, 0.2);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.work-item-card.full-width {
+  grid-column: span 2;
+}
+
+.work-item-card:hover {
+  border-color: #3AC5A3;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(58, 197, 163, 0.2);
+}
+
+.work-card-media {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background: #030814;
+}
+
+.work-item-card.full-width .work-card-media {
+  height: 340px;
+}
+
+.work-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease, filter 0.3s ease;
+}
+
+.work-item-card:hover .work-card-media img {
+  transform: scale(1.05);
+}
+
+/* Floating overlay badges */
+.work-badge-category {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #020716;
+  background: #3AC5A3;
+  padding: 4px 12px;
+  border-radius: 6px;
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.work-card-content {
+  padding: 24px;
+  background: rgba(10, 19, 37, 0.95);
+}
+
+.work-card-title {
+  font-family: 'Oswald', 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.work-card-desc {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #a0a0ab;
+  margin-bottom: 16px;
+}
+
+.work-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.work-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ─── Social & Contact (Follow Article) ─────────────────────────────────── */
+.social-links-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.social-link-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: rgba(10, 19, 37, 0.7);
+  border: 1px solid rgba(58, 197, 163, 0.2);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.social-link-item:hover {
+  background: rgba(10, 24, 47, 0.95);
+  border-color: #3AC5A3;
+  transform: translateX(6px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.social-link-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.social-link-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.social-link-handle {
+  font-size: 0.85rem;
+  color: #3AC5A3;
+}
+
+/* ─── Parallax Timeline (Experience Section) ────────────────────────────── */
+.parallax-timeline-container {
+  position: relative;
+  width: 100%;
+}
+
+@media screen and (max-width: 860px) {
+  .timeline-central-spine {
+    left: 20px !important;
+    transform: none !important;
+  }
+
+  .timeline-spine-node {
+    left: 20px !important;
+  }
+
+  .timeline-connector-line {
+    left: 20px !important;
+    right: auto !important;
+    width: 25px !important;
+  }
+
+  .timeline-opposite-date {
+    display: none !important;
+  }
+
+  .timeline-card-wrapper {
+    width: calc(100% - 55px) !important;
+    margin-left: 55px !important;
+    margin-right: 0 !important;
+    transform: none !important;
+  }
+
+  .timeline-item-row {
+    margin: 24px 0 !important;
+  }
+}
+
+/* ─── Parallax Projects (Showcase Section) ──────────────────────────────── */
+.parallax-projects-container {
+  width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  .parallax-projects-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─── Responsive Media Queries ──────────────────────────────────────────── */
+@media screen and (max-width: 992px) {
+  .article-heading-col {
+    float: none;
+    width: 100%;
+    margin-bottom: 40px;
+  }
+  .article-content-col {
+    margin-left: 0;
+    width: 100%;
+  }
+  .section-flex-container {
+    flex-direction: column !important;
+    gap: 32px !important;
+  }
+  .section-flex-reverse {
+    flex-direction: column !important;
+  }
+  .section-flex-reverse .section-sticky-header {
+    text-align: left !important;
+  }
+  .section-flex-reverse .section-sticky-header .article-number {
+    left: 0 !important;
+    right: auto !important;
+  }
+  .section-sticky-header {
+    position: relative !important;
+    top: 0 !important;
+    flex: none !important;
+    width: 100% !important;
+  }
+  .works-row {
+    grid-template-columns: 1fr;
+  }
+  .work-item-card.full-width {
+    grid-column: span 1;
+  }
+  .header-placeholder {
+    height: 140vh;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .section-coder article {
+    padding: 70px 0;
+  }
+  .exp-title-text {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .exp-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

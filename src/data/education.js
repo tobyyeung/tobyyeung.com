@@ -1,6 +1,7 @@
 export const uiucCourses = [
   "CS 374: Introduction to Algorithms & Models of Computation",
   "CS 340: Computer Systems",
+  "CS 307: Modeling and Learning in Data Science",
   "ECON 302: Intermediate Microeconomic Theory",
   "MATH 257: Linear Algebra with Computational Applications",
   "MATH 231: Calculus II",

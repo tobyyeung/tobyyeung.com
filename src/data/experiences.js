@@ -1,18 +1,19 @@
 export const experiences = [
   {
-    id: 'invite', title: 'INVITE AI Institute', role: 'AI Researcher', dateStr: 'Jun 2026 - Present',
+    id: 'invite', title: 'NSF National AI Research Institute (INVITE)', role: 'AI Researcher', dateStr: 'Jun 2026 - Aug 2026',
     logo: import.meta.env.BASE_URL + 'images/experience/invite.jpg',
     images: [
       import.meta.env.BASE_URL + 'images/experience/invite.jpg'
     ],
     startM: 6, startY: 2026, endM: 8, endY: 2026, side: 'left',
-    shortDesc: 'Architecting intelligent RAG systems and full-stack applications to empower educators with data-driven insights.',
+    shortDesc: 'Deployed local quantized Gemma LLMs, built Router-Tools-Composer & RAG pipelines with ChromaDB, and interactive Vis.js knowledge graphs.',
     bullets: [
-      'Developed the <strong>Keating Framework</strong>, a full-stack AI web application using <strong>FastAPI</strong> and <strong>Python</strong> to assist educators in identifying at-risk students by synthesizing academic and behavioral data.',
-      'Architected a <strong>Retrieval-Augmented Generation (RAG)</strong> system utilizing a <strong>DuckDB</strong> backend and <strong>ChromaDB</strong>, optimizing query routing and reducing LLM dependency.',
-      'Engineered a local machine learning inference pipeline deploying quantized LLMs (<strong>Ollama Gemma</strong>) and semantic embeddings, ensuring data privacy while eliminating API latency.'
+      'Deployed local <strong>Gemma</strong> models with <strong>Ollama</strong>, <strong>PyTorch</strong>, and <strong>FastAPI</strong>, using quantization and structured JSON outputs for query classification while keeping student data local.',
+      'Built a <strong>Router–Tools–Composer</strong> pipeline that separated request routing, data analysis, and response generation, with keyword-based fallbacks when LLM inference was unavailable.',
+      'Built a <strong>RAG pipeline</strong> with <strong>ChromaDB</strong> and <strong>Sentence-Transformers</strong> embeddings, while using <strong>DuckDB</strong>, <strong>Pandas</strong>, and <strong>NumPy</strong> to reduce unnecessary LLM inference calls by 40%.',
+      'Developed a <strong>Next.js/React</strong> and <strong>FastAPI</strong> interface with streaming chat responses and interactive <strong>Vis.js</strong> knowledge graphs, improving query performance by 30% over the legacy CSV system.'
     ],
-    tags: ['Python', 'FastAPI', 'RAG', 'DuckDB', 'ChromaDB', 'LLMs']
+    tags: ['FastAPI', 'Next.js', 'PyTorch', 'Ollama', 'RAG', 'ChromaDB', 'DuckDB', 'Vis.js', 'Pandas']
   },
   {
     id: 'uiuc_tech_services', title: 'Technology Services, UIUC', role: 'Site Consultant', dateStr: 'Apr 2026 - Present',
@@ -93,13 +94,13 @@ export const experiences = [
       import.meta.env.BASE_URL + 'images/experience/kesselworks.jpg'
     ],
     startM: 6, startY: 2022, endM: 8, endY: 2024, side: 'left',
-    shortDesc: 'Engineered full-stack organizational tools, optimized cloud infrastructure, and redesigned mission-critical user interfaces.',
+    shortDesc: 'Developed a React scheduling platform supporting 10+ contractor schedules and refactored AWS REST APIs, reducing page load latency by 35%.',
     bullets: [
-      'Engineered a <strong>cloud-based calendar system</strong> using <strong>React</strong> and <strong>JavaScript</strong>, enabling internal teams to track project timelines and coordinate contractor availability.',
-      'Optimized <strong>MySQL database queries</strong> and refactored <strong>AWS-hosted REST APIs</strong>, reducing page load latency and improving system throughput.',
+      'Developed a <strong>React</strong> scheduling platform supporting <strong>10+ concurrent contractor schedules</strong> and project timelines, enabling real-time resource allocation and project tracking.',
+      'Refactored <strong>MySQL</strong> schemas and optimized <strong>AWS REST API</strong> endpoints, reducing page load latency by <strong>35%</strong>.',
       'Deployed and managed containerized microservices via <strong>Docker</strong> and <strong>Kubernetes on AWS</strong>, establishing <strong>CI/CD workflows</strong> and cloud infrastructure best practices.'
     ],
-    tags: ['React', 'JavaScript', 'AWS', 'Docker', 'Kubernetes', 'MySQL']
+    tags: ['React', 'JavaScript', 'AWS', 'REST APIs', 'MySQL', 'Docker', 'Kubernetes']
   }
 ];
 

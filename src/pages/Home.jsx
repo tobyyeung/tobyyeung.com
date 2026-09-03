@@ -1,172 +1,60 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import ProjectCard from '../components/ProjectCard';
+import React, { useState, useEffect, useRef } from 'react';
 import ProjectModal from '../components/ProjectModal';
-import ExperienceCard from '../components/ExperienceCard';
 import ExperienceModal from '../components/ExperienceModal';
-import EducationCard from '../components/EducationCard';
-import GoogleUSMap from '../components/GoogleUSMap';
-import { getProjects } from '../data/projects';
-import { experiences, TIMELINE_START_YEAR, TIMELINE_START_MONTH } from '../data/experiences';
+import ParallaxHeaderCity from '../components/ParallaxHeaderCity';
+import ParallaxExperienceTimeline from '../components/ParallaxExperienceTimeline';
+import ParallaxProjectsShowcase from '../components/ParallaxProjectsShowcase';
+import CyberDecryptHeading from '../components/CyberDecryptHeading';
+import CyberDecryptText from '../components/CyberDecryptText';
 import { uiucCourses, ucsdCourses } from '../data/education';
 import { skillsData } from '../data/skills';
-import { useBreakpoints } from '../hooks/useBreakpoints';
-import { getPositionForDate, getBasePositionForDate, computeCardPositions } from '../utils/timelineUtils';
-import { useInView } from '../hooks/useInView';
-import ScrollIndicator from '../components/ScrollIndicator';
-
 
 const Home = () => {
-  const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedExperience, setSelectedExperience] = useState(null);
-  const [hoveredExpId, setHoveredExpId] = useState(null);
   const [activeSkillCategory, setActiveSkillCategory] = useState("Languages");
-  const cardRefs = useRef({});
-  const [cardHeights, setCardHeights] = useState({});
+  const [showAllUiucCourses, setShowAllUiucCourses] = useState(false);
 
-  const projectsRef = useRef(null);
-  const experiencesRef = useRef(null);
-  const educationRef = useRef(null);
-  const projectsInView = useInView(projectsRef, { threshold: 0.1, triggerOnce: true });
-  const experiencesInView = useInView(experiencesRef, { threshold: 0.1, triggerOnce: true });
-  const educationInView = useInView(educationRef, { threshold: 0.1, triggerOnce: true });
+  // Parallax scroll & mouse tracking
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+  const placeholderRef = useRef(null);
 
-  // Typewriter effect state
-  const fullDescription = "A CS & Econ student @ UIUC, specializing in building full-stack apps, containerized microservices, and AI systems.";
-  const [typedText, setTypedText] = useState("");
-  const [isTyping, setIsTyping] = useState(true);
-
-  const { windowWidth, isMobileSm, isMobileLg, isDesktopSm } = useBreakpoints();
-
-  const yearMarkers = [2026, 2025, 2024, 2023, 2022];
-  const isMobileTimeline = isMobileLg;
-
+  // Handle scroll parallax calculation
   useEffect(() => {
-    setProjects(getProjects());
-
-    // Typewriter effect logic
-    let typeInterval;
-
-    const startTyping = () => {
-      setIsTyping(true);
-      setTypedText("");
-      let currentIndex = 0;
-
-      typeInterval = setInterval(() => {
-        if (currentIndex <= fullDescription.length) {
-          setTypedText(fullDescription.slice(0, currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(typeInterval);
-          setIsTyping(false);
-        }
-      }, 25); // Faster typing speed (25ms)
+    const handleScroll = () => {
+      const el = placeholderRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const totalScrollDistance = el.offsetHeight - window.innerHeight;
+      const currentProgress = Math.min(Math.max(-rect.top / (totalScrollDistance || 1), 0), 1);
+      setScrollProgress(currentProgress);
     };
 
-    startTyping();
-
-    return () => {
-      clearInterval(typeInterval);
-    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Measure card heights after render & on resize
-  const measureCards = useCallback(() => {
-    const newHeights = {};
-    let changed = false;
-    for (const exp of experiences) {
-      const el = cardRefs.current[exp.id];
-      if (el) {
-        const h = el.offsetHeight;
-        newHeights[exp.id] = h;
-        if (h !== cardHeights[exp.id]) changed = true;
-      }
-    }
-    if (changed || Object.keys(newHeights).length !== Object.keys(cardHeights).length) {
-      setCardHeights(newHeights);
-    }
-  }, [cardHeights]);
-
-  // Measure on mount, after animations settle, and on window resize
+  // Handle mouse move parallax on desktop
   useEffect(() => {
-    const t1 = setTimeout(measureCards, 50);
-    const t2 = setTimeout(measureCards, 300);
-    const t3 = setTimeout(measureCards, 800);
-
-    window.addEventListener('resize', measureCards);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      window.removeEventListener('resize', measureCards);
-    };
-  }, [measureCards]);
-
-  // Use ResizeObserver on individual cards for dynamic window size / content changes
-  useEffect(() => {
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => {
-      measureCards();
-    });
-    for (const exp of experiences) {
-      const el = cardRefs.current[exp.id];
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
-  }, [measureCards, experiencesInView]);
-
-  // Compute collision-free positions from measured heights
-  const { positions: cardPositions, totalHeight: timelineHeight } = useMemo(() => {
-    if (isMobileTimeline) return { positions: {}, totalHeight: 0 };
-    return computeCardPositions(experiences, cardHeights, 28);
-  }, [cardHeights, isMobileTimeline]);
-
-  // Sorting experiences 
-  const sortedExperiences = useMemo(() => {
-    return isMobileTimeline
-      ? [...experiences].sort((a, b) => {
-        const aTime = a.endY * 12 + a.endM;
-        const bTime = b.endY * 12 + b.endM;
-        if (aTime !== bTime) return bTime - aTime;
-        return a.title.localeCompare(b.title);
-      })
-      : experiences;
-  }, [isMobileTimeline]);
-
-  // Chronological Overlap Calculation
-  const expOverlapLevels = useMemo(() => {
-    const levels = {};
-    const calculateLevels = (side) => {
-      const sideExps = experiences.filter(e => e.side === side).sort((a, b) => (b.endY * 12 + b.endM) - (a.endY * 12 + a.endM));
-      const active = [];
-
-      for (const exp of sideExps) {
-        const start = exp.startY * 12 + exp.startM;
-        const end = exp.endY * 12 + exp.endM;
-
-        let level = 0;
-        const usedLevels = new Set();
-
-        for (const act of active) {
-          if (act.start < end && act.end > start) {
-            usedLevels.add(act.level);
-          }
-        }
-
-        while (usedLevels.has(level)) level++;
-
-        levels[exp.id] = level;
-        active.push({ id: exp.id, start, end, level });
-      }
+    const handleMouseMove = (e) => {
+      if (window.innerWidth < 960) return;
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      setMouseOffset({ x, y });
     };
 
-    calculateLevels('left');
-    calculateLevels('right');
-    return levels;
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
-    <>
+    <div className="parallax-page">
+      {/* Noise Texture Overlay */}
+      <div className="noise-bg" />
+
+      {/* Experience & Project Detail Modals */}
       <ExperienceModal
         exp={selectedExperience}
         onClose={() => setSelectedExperience(null)}
@@ -175,437 +63,482 @@ const Home = () => {
         project={selectedProject}
         onClose={() => setSelectedProject(null)}
       />
-      <ScrollIndicator />
-      <main className="animate-fade-in" style={{ paddingBottom: '0' }}>
-        {/* Hero Section */}
-        <section id="hero" className="hero-landing-bg" style={{
-          minHeight: '100vh',
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Animated background image */}
-          <div className="hero-bg-flow dark-overlay" style={{
-            backgroundImage: `url(${import.meta.env.BASE_URL}images/landingpage.jpg)`,
-            display: 'none'
-          }} />
-          {/* Decorative Google Map Background */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 5,
-            opacity: 0.7,
-            pointerEvents: 'none'
-          }}>
-            <GoogleUSMap decorative />
-          </div>
-          {/* Light mode variant — handled via CSS [data-theme='light'] selector on the same element */}
-          <style>{`
-            [data-theme='light'] .hero-bg-flow {
-              background-image: url(${import.meta.env.BASE_URL}images/landingpage-light.png) !important;
-            }
-          `}</style>
-          <div className="container" style={{ position: 'relative', zIndex: 11, textAlign: 'left', width: '100%' }}>
-            <div style={{
-              display: 'flex',
-              flexDirection: windowWidth < 960 ? 'column' : 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '2.5rem'
-            }}>
-              {/* Left Info Column */}
-              <div style={{ flex: 1, maxWidth: windowWidth < 960 ? '100%' : '780px', textAlign: 'left' }}>
-                <h1 style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '1.25rem', lineHeight: '1.1', textAlign: 'left' }}>
-                  <span style={{ fontSize: '2.2rem', color: '#ffffff', fontWeight: '500' }}>Hi, I'm</span>
-                  <span className="hero-name-title" style={{
-                    fontSize: '5rem',
-                    display: 'inline-block',
-                    width: 'fit-content',
-                    paddingBottom: '0.2em',
-                    marginBottom: '-0.2em',
-                    color: '#3AC5A3',
-                    fontWeight: '700'
-                  }}>Toby Yeung</span>
-                </h1>
-                <p style={{ fontSize: '1.18rem', color: 'rgba(255, 255, 255, 0.92)', maxWidth: '720px', marginBottom: '2rem', lineHeight: '1.6', minHeight: windowWidth < 600 ? '90px' : '55px' }}>
-                  {typedText}
-                  <span className="cursor-blink" style={{ color: '#3AC5A3', opacity: isTyping ? 1 : 0.7 }}>|</span>
-                </p>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <button onClick={() => document.getElementById('experience')?.scrollIntoView({ behavior: 'smooth' })} className="btn btn-primary" style={{ fontSize: '1.05rem', gap: '0.4rem' }}>
-                    Experiences
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '0.2rem' }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                  </button>
-                  <button onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })} className="btn btn-primary" style={{ fontSize: '1.05rem', gap: '0.4rem' }}>
-                    Explore Projects
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '0.2rem' }}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                  </button>
-                  <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="btn btn-secondary" style={{ fontSize: '1.05rem', gap: '0.4rem' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                    Contact Me
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Experience Section */}
-        <section id="experience" ref={experiencesRef} className="mesh-bg-base mesh-bg-1" style={{ padding: '4rem 0' }}>
-          <div className="section-bg-number right">01</div>
-          <div className="container">
-            <h2 className="section-title">Experience</h2>
+      {/* ─── Fixed Parallax Skyline Header Scene ─── */}
+      <div
+        id="hero"
+        className="parallax-header"
+        style={{
+          opacity: scrollProgress > 0.95 ? Math.max(0, 1 - (scrollProgress - 0.95) * 20) : 1
+        }}
+      >
+        <ParallaxHeaderCity
+          scrollProgress={scrollProgress}
+          mouseOffset={mouseOffset}
+        />
+      </div>
 
-            <div style={{
-              position: 'relative',
-              maxWidth: '1000px',
-              margin: '0 auto',
-              height: isMobileTimeline ? 'auto' : `${timelineHeight}px`,
-              display: isMobileTimeline ? 'flex' : 'block',
-              flexDirection: 'column',
-              gap: '2rem',
-              transition: 'height 0.15s ease-out'
-            }}>
-              {/* The Central Vertical Spine */}
-              <div style={{ position: 'absolute', left: isMobileTimeline ? '1.5rem' : '50%', top: 0, bottom: 0, transform: 'translateX(-50%)', width: '4px', background: 'var(--border-glass)', borderRadius: '4px' }}></div>
+      {/* Scroll distance placeholder for header parallax ascent */}
+      <div ref={placeholderRef} className="header-placeholder" />
 
-              {!isMobileTimeline && yearMarkers.map(year => {
-                const topPx = getPositionForDate(year, 1, experiences);
-
-                return (
-                  <div key={year} style={{
-                    position: 'absolute',
-                    top: `${topPx}px`,
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'var(--bg-primary)',
-                    border: '1px solid var(--border-glass)',
-                    boxShadow: 'var(--shadow-sm)',
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '6px',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem',
-                    fontWeight: 'bold',
-                    zIndex: 50,
-                    transition: 'top 0.15s ease-out'
-                  }}>
-                    {year}
-                  </div>
-                );
-              })}
-
-              {sortedExperiences.map((exp) => {
-                const isCardOnLeft = exp.side === 'left';
-                const renderAsLeft = isMobileTimeline ? false : isCardOnLeft;
-
-                const topPx = isMobileTimeline ? 0 : (cardPositions[exp.id] ?? getPositionForDate(exp.endY, exp.endM, experiences));
-                const startPx = getBasePositionForDate(exp.startY, exp.startM);
-                const endPx = getBasePositionForDate(exp.endY, exp.endM);
-
-                const dotHeight = Math.max(16, startPx - endPx);
-                const dotWidth = '0.5rem';
-
-                const isGreen = exp.id === 'invite' || exp.id === 'thecoderschool';
-                const isBlue = exp.id === 'mathnasium' || exp.id === 'techknowhow_asst';
-                const accentColor = isGreen ? 'var(--accent-primary)' : (isBlue ? '#38bdf8' : 'var(--accent-secondary)');
-                const borderGlassColor = isGreen ? 'rgba(58, 197, 163, 0.15)' : (isBlue ? 'rgba(56, 189, 248, 0.2)' : 'rgba(168, 85, 247, 0.25)');
-
-                const overlapLevel = expOverlapLevels[exp.id] || 0;
-                const dotOffset = overlapLevel > 0 ? `-${1.5 - overlapLevel * 1}rem` : '-1.5rem';
-                const xShiftAmount = overlapLevel * 2;
-                const xShift = overlapLevel > 0 && !isMobileTimeline ? (renderAsLeft ? `-${xShiftAmount}rem` : `${xShiftAmount}rem`) : '0';
-
-                // Determine chronological index for animation delay
-                const sortedExps = [...experiences].sort((a, b) => (b.endY * 12 + b.endM) - (a.endY * 12 + a.endM));
-                const animationIndex = sortedExps.findIndex(e => e.id === exp.id);
-
-                return (
-                  <ExperienceCard
-                    key={exp.id}
-                    exp={exp}
-                    isMobileTimeline={isMobileTimeline}
-                    renderAsLeft={renderAsLeft}
-                    windowWidth={windowWidth}
-                    hoveredExpId={hoveredExpId}
-                    setHoveredExpId={setHoveredExpId}
-                    topPx={topPx}
-                    idealTopPx={endPx}
-                    xShift={xShift}
-                    dotWidth={dotWidth}
-                    dotHeight={dotHeight}
-                    dotOffset={dotOffset}
-                    accentColor={accentColor}
-                    borderGlassColor={borderGlassColor}
-                    cardRef={el => { cardRefs.current[exp.id] = el; }}
-                    animationIndex={animationIndex}
-                    isVisible={experiencesInView}
-                    onLearnMore={(selectedExp) => setSelectedExperience(selectedExp)}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Projects Section */}
-        <section id="projects" ref={projectsRef} className="mesh-bg-base mesh-bg-2" style={{ padding: '4rem 0' }}>
-          <div className="section-bg-number left">02</div>
-          <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '3rem' }}>
-              <div>
-                <h2 className="section-title" style={{ marginBottom: '0.5rem', textAlign: 'left' }}>Projects</h2>
-              </div>
+      {/* ─── Editorial Portfolio Sections (Inspired by r4ms3s.cz) ─── */}
+      <div className="section-coder">
+        {/* ─── Section 01: About ─── */}
+        <article id="about" style={{ position: 'relative' }}>
+          <div className="parallax-container" style={{ position: 'relative', zIndex: 6 }}>
+            <div className="article-heading-col">
+              <span className="article-number">01</span>
+              <CyberDecryptHeading />
             </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))',
-              gap: '2.5rem',
-              paddingTop: '1rem'
-            }}>
-              {projects.length > 0 ? (
-                projects.map((project, index) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onClick={() => setSelectedProject(project)}
-                    animationIndex={index}
-                    isVisible={projectsInView}
-                  />
-                ))
-              ) : (
-                <p style={{ color: 'var(--text-secondary)' }}>No projects available. Add some in the Admin Panel.</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Education Section */}
-        <section id="education" ref={educationRef} className="mesh-bg-base mesh-bg-3" style={{ padding: '4rem 0' }}>
-          <div className="section-bg-number right">03</div>
-          <div className="container">
-            <h2 className="section-title" style={{ marginBottom: '2rem', textAlign: 'left' }}>Education</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <EducationCard
-                institution="University of Illinois Urbana-Champaign"
-                url="https://illinois.edu/"
-                degree="B.S. in Computer Science and Economics (Expected May 2028)"
-                gpa="GPA: 4.0/4.0 (Dean's List)"
-                courses={uiucCourses}
-                logoUrl={import.meta.env.BASE_URL + "images/education/uiuc.png"}
-                animationIndex={0}
-                isVisible={educationInView}
+            <div className="article-content-col">
+              <CyberDecryptText
+                text="My name is Toby Yeung — I’m a Full-Stack Developer & AI Systems Engineer."
+                highlights={[
+                  { text: 'Toby Yeung', className: 'strong' },
+                  { text: 'Full-Stack Developer', className: 'highlight' },
+                  { text: 'AI Systems Engineer', className: 'highlight' }
+                ]}
+                delay={200}
+                speed={32}
               />
-              <EducationCard
-                institution="UC San Diego Extended Studies"
-                url="https://extendedstudies.ucsd.edu/"
-                gpa="GPA: 4.0/4.0"
-                courses={ucsdCourses}
-                initialShowCount={ucsdCourses.length}
-                logoUrl={import.meta.env.BASE_URL + "images/education/ucsd.png"}
-                animationIndex={1}
-                isVisible={educationInView}
+              <CyberDecryptText
+                text="Currently studying Computer Science & Economics at the University of Illinois Urbana-Champaign (UIUC)."
+                highlights={[
+                  { text: 'Computer Science & Economics', className: 'strong' },
+                  { text: 'University of Illinois Urbana-Champaign (UIUC)', className: 'strong' }
+                ]}
+                delay={450}
+                speed={32}
               />
-            </div>
-          </div>
-        </section>
-
-        {/* Skills Section */}
-        <section id="skills" className="mesh-bg-base mesh-bg-4" style={{ padding: '6rem 0' }}>
-          <div className="section-bg-number left">04</div>
-          <div className="container">
-            <h2 className="section-title">Skills</h2>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '4rem' }}>
-              {Object.keys(skillsData).map(category => (
-                <button
-                  key={category}
-                  onClick={() => setActiveSkillCategory(category)}
-                  style={{
-                    padding: '0.6rem 1.25rem',
-                    borderRadius: '9999px',
-                    background: activeSkillCategory === category ? 'var(--accent-primary)' : 'var(--bg-glass)',
-                    border: `1px solid ${activeSkillCategory === category ? 'var(--accent-primary)' : 'var(--border-glass)'}`,
-                    color: activeSkillCategory === category ? 'var(--bg-primary)' : 'var(--text-secondary)',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    transition: 'all 0.3s ease',
-                    fontSize: '0.95rem'
-                  }}
+              <CyberDecryptText
+                text="I specialize in engineering high-performance web applications, scalable containerized microservices, local LLM inference pipelines, and Retrieval-Augmented Generation (RAG) architectures."
+                delay={700}
+                speed={30}
+              />
+              <CyberDecryptText
+                text="Do you need React, FastAPI, Python, Docker, Kubernetes, PostgreSQL, or cutting-edge AI / RAG integration?"
+                highlights={[
+                  { text: 'React', className: 'strong' },
+                  { text: 'FastAPI', className: 'strong' },
+                  { text: 'Python', className: 'strong' },
+                  { text: 'Docker', className: 'strong' },
+                  { text: 'Kubernetes', className: 'strong' },
+                  { text: 'PostgreSQL', className: 'strong' },
+                  { text: 'AI / RAG', className: 'strong' }
+                ]}
+                delay={950}
+                speed={32}
+              />
+              <p className="article-text">
+                <a
+                  href="mailto:tobycyeung@gmail.com?subject=Hello%20Toby!"
+                  className="glitch-typo"
+                  data-title="Let's talk"
                 >
-                  {category}
-                  <span style={{
-                    background: activeSkillCategory === category ? 'var(--border-glass)' : 'var(--bg-secondary)',
-                    padding: '0.15rem 0.6rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.8rem',
-                    color: activeSkillCategory === category ? 'var(--bg-primary)' : 'var(--text-tertiary)'
-                  }}>
-                    {skillsData[category].length}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-              gap: '1.5rem',
-              justifyItems: 'center',
-              maxWidth: '900px',
-              margin: '0 auto'
-            }}>
-              {skillsData[activeSkillCategory].map(skill => (
-                <div key={skill} className="glass-panel" style={{
-                  width: '100%',
-                  aspectRatio: '1/1',
-                  background: 'var(--bg-tertiary)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '1.5rem 1rem',
-                  textAlign: 'center',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  cursor: 'default',
-                  borderRadius: '16px'
-                }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    background: 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '1rem',
-                    color: 'var(--text-primary)'
-                  }}>
-                    <img
-                      src={`${import.meta.env.BASE_URL}images/skills/${skill.replace(/[\\/\\\\]/g, '_').toLowerCase()}.png`}
-                      alt={skill}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
-                      }}
-                    />
-                    <span style={{ display: 'none', fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 'bold' }}>
-                      {skill.charAt(0)}
-                    </span>
-                  </div>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '500' }}>
-                    {skill}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section id="contact" style={{ padding: '6rem 0', background: 'var(--bg-secondary)' }}>
-          <div className="container" style={{ maxWidth: '800px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 className="section-title" style={{ marginBottom: '1rem' }}>Contact Me</h2>
-              <p style={{ color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-                I'm currently open to new opportunities. Whether you have a question or just want to say hi, feel free to drop a message!
+                  <span>Let's talk →</span>
+                </a>
               </p>
             </div>
+            <div style={{ clear: 'both' }} />
+          </div>
 
-            <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const name = formData.get('name');
-                const email = formData.get('email');
-                const message = formData.get('message');
-                window.location.href = `mailto:tobycyeung@gmail.com?subject=Message from ${name}&body=${encodeURIComponent(message + '\n\nFrom: ' + name + ' (' + email + ')')}`;
-              }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Strong progressive blurry gradient transition on Toby section */}
+          <div className="about-bottom-blurry-transition" aria-hidden="true">
+            <div className="blur-backdrop" />
+            <div className="color-gradient" />
+          </div>
+        </article>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left' }}>
-                    <label htmlFor="name" style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '500' }}>Name</label>
-                    <input type="text" id="name" name="name" required placeholder="John Doe" style={{
-                      padding: '1rem',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)',
-                      background: 'rgba(0,0,0,0.2)',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'inherit',
-                      fontSize: '1rem'
-                    }} />
+        {/* ─── Section 02: Experience (One Experience Per Scroll with Cinematic Map Flight) ─── */}
+        <div id="experience" style={{ position: 'relative', width: '100%', marginTop: '-4px' }}>
+          <ParallaxExperienceTimeline onSelectExperience={setSelectedExperience} />
+        </div>
+
+        {/* ─── Section 03: Works × Projects (Pinned Horizontal Scroll) ─── */}
+        <div id="projects" style={{ position: 'relative', width: '100%', marginTop: '-4px' }}>
+          <ParallaxProjectsShowcase onSelectProject={setSelectedProject} />
+        </div>
+
+        {/* ─── Section 04: Education ─── */}
+        <article id="education" style={{ marginTop: '-4px' }}>
+          <div className="parallax-container section-flex-container section-flex-reverse">
+            <div className="article-heading-col section-sticky-header">
+              <span className="article-number">04</span>
+              <h1 className="article-heading" style={{ whiteSpace: 'nowrap' }}>
+                EDU<strong>CATION</strong>
+              </h1>
+            </div>
+
+            <div className="article-content-col section-flex-content">
+              {/* UIUC Education Card (Primary Degree) */}
+              <div
+                style={{
+                  background: 'rgba(10, 19, 37, 0.75)',
+                  border: '1px solid rgba(58, 197, 163, 0.28)',
+                  borderRadius: '16px',
+                  padding: '28px',
+                  marginBottom: '22px',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      background: '#ffffff',
+                      borderRadius: '10px',
+                      padding: '4px',
+                      width: '52px',
+                      height: '52px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      flexShrink: 0
+                    }}
+                  >
+                    <img
+                      src={`${import.meta.env.BASE_URL}images/education/uiuc.png`}
+                      alt="UIUC Logo"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
                   </div>
+                  <div>
+                    <h3 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '1.6rem', color: '#ffffff', textTransform: 'uppercase', margin: 0, lineHeight: 1.15 }}>
+                      University of Illinois Urbana-Champaign
+                    </h3>
+                    <p style={{ color: '#3AC5A3', fontWeight: '600', fontSize: '0.98rem', margin: '4px 0 0 0' }}>
+                      B.S. in Computer Science &amp; Economics (Expected May 2028)
+                    </p>
+                    <p style={{ color: '#a0a0ab', fontSize: '0.88rem', margin: '2px 0 0 0' }}>
+                      GPA: 4.0 / 4.0 • Dean's List
+                    </p>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.9rem', color: '#a0a0ab', marginBottom: '10px', fontWeight: '500' }}>
+                  Selected Coursework:
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {(showAllUiucCourses ? uiucCourses : uiucCourses.slice(0, 8)).map((c) => (
+                    <span key={c} className="work-tag" style={{ color: '#ffffff', background: 'rgba(58, 197, 163, 0.09)', borderColor: 'rgba(58, 197, 163, 0.25)' }}>
+                      {c}
+                    </span>
+                  ))}
+                </div>
+                {uiucCourses.length > 8 && (
+                  <button
+                    onClick={() => setShowAllUiucCourses(!showAllUiucCourses)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#3AC5A3',
+                      fontFamily: "'Oswald', sans-serif",
+                      fontSize: '0.88rem',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      padding: 0,
+                      marginTop: '12px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {showAllUiucCourses ? '← Show Less Coursework' : `+ Show All ${uiucCourses.length} Courses →`}
+                  </button>
+                )}
+              </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left' }}>
-                    <label htmlFor="email" style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '500' }}>Email</label>
-                    <input type="email" id="email" name="email" required placeholder="john@example.com" style={{
-                      padding: '1rem',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)',
-                      background: 'rgba(0,0,0,0.2)',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'inherit',
-                      fontSize: '1rem'
-                    }} />
+              {/* Side-by-Side Row: UCSD Extended Studies & Honors/Awards */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))',
+                  gap: '20px',
+                  alignItems: 'stretch'
+                }}
+              >
+                {/* UCSD Extended Studies (Compact / Smaller) */}
+                <div
+                  style={{
+                    background: 'rgba(10, 19, 37, 0.75)',
+                    border: '1px solid rgba(58, 197, 163, 0.25)',
+                    borderRadius: '14px',
+                    padding: '20px 22px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <div
+                        style={{
+                          background: '#ffffff',
+                          borderRadius: '8px',
+                          padding: '3px',
+                          width: '42px',
+                          height: '42px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          boxShadow: '0 3px 10px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        <img
+                          src={`${import.meta.env.BASE_URL}images/education/ucsd.png`}
+                          alt="UC San Diego Logo"
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                      </div>
+                      <div>
+                        <h4 style={{ fontFamily: "'Oswald', sans-serif", fontSize: '1.2rem', color: '#ffffff', textTransform: 'uppercase', margin: 0, lineHeight: 1.15 }}>
+                          UC San Diego Extended Studies
+                        </h4>
+                        <p style={{ color: '#3AC5A3', fontWeight: '600', fontSize: '0.82rem', margin: '3px 0 0 0' }}>
+                          Machine Learning &amp; Deep Neural Networks
+                        </p>
+                        <p style={{ color: '#a0a0ab', fontSize: '0.78rem', margin: '2px 0 0 0' }}>
+                          GPA: 4.0 / 4.0
+                        </p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: '#a0a0ab', marginBottom: '8px', fontWeight: '500' }}>
+                      Curriculum &amp; Specializations:
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {ucsdCourses.map((c) => (
+                        <span key={c} className="work-tag" style={{ color: '#ffffff', background: 'rgba(58, 197, 163, 0.08)', borderColor: 'rgba(58, 197, 163, 0.2)', fontSize: '0.74rem', padding: '3px 8px' }}>
+                          {c}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left' }}>
-                  <label htmlFor="message" style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '500' }}>Message</label>
-                  <textarea id="message" name="message" required placeholder="How can I help you?" rows="5" style={{
-                    padding: '1rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-glass)',
-                    background: 'rgba(0,0,0,0.2)',
-                    color: 'var(--text-primary)',
-                    fontFamily: 'inherit',
-                    fontSize: '1rem',
-                    resize: 'vertical'
-                  }}></textarea>
+                {/* Honors & Awards (Compact / Smaller, side-by-side) */}
+                <div
+                  style={{
+                    background: 'rgba(10, 19, 37, 0.55)',
+                    border: '1px dashed rgba(58, 197, 163, 0.3)',
+                    borderRadius: '14px',
+                    padding: '20px 22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <div>
+                    <h4
+                      style={{
+                        fontFamily: "'Oswald', sans-serif",
+                        fontSize: '1.05rem',
+                        fontWeight: '700',
+                        color: '#3AC5A3',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        marginBottom: '12px'
+                      }}
+                    >
+                      Honors &amp; Awards
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div>
+                        <h5 style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: '600', margin: 0 }}>The Coder Games 2020</h5>
+                        <p style={{ color: '#a0a0ab', fontSize: '0.78rem', margin: '1px 0 0 0' }}>Typed Bracket Winner • theCoderSchool</p>
+                      </div>
+                      <div>
+                        <h5 style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: '600', margin: 0 }}>CalChess Super States Championship</h5>
+                        <p style={{ color: '#a0a0ab', fontSize: '0.78rem', margin: '1px 0 0 0' }}>8th Place (2022-23) • BayAreaChess</p>
+                      </div>
+                      <div>
+                        <h5 style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: '600', margin: 0 }}>AP Scholar with Distinction</h5>
+                        <p style={{ color: '#a0a0ab', fontSize: '0.78rem', margin: '1px 0 0 0' }}>Calculus AB (5), Chinese Language (5)</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', padding: '1rem', fontSize: '1.1rem', cursor: 'pointer' }}>
-                  Send Message
-                </button>
-              </form>
+              </div>
             </div>
           </div>
-        </section>
+        </article>
 
-        {/* Footer */}
+        {/* ─── Section 05: Skills ─── */}
+        <article id="skills">
+          <div className="parallax-container">
+            <div className="article-heading-col">
+              <span className="article-number">05</span>
+              <h1 className="article-heading">
+                SKILLS <strong>&amp;</strong><br />
+                STACK
+              </h1>
+            </div>
+
+            <div className="article-content-col">
+              {/* Skills Category Tabs */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                {Object.keys(skillsData).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveSkillCategory(cat)}
+                    style={{
+                      fontFamily: "'Oswald', sans-serif",
+                      fontSize: '0.95rem',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      padding: '8px 18px',
+                      borderRadius: '8px',
+                      border: activeSkillCategory === cat ? '1px solid #3AC5A3' : '1px solid rgba(255, 255, 255, 0.15)',
+                      background: activeSkillCategory === cat ? '#3AC5A3' : 'rgba(10, 19, 37, 0.6)',
+                      color: activeSkillCategory === cat ? '#020716' : '#ffffff',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Skills Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '14px' }}>
+                {skillsData[activeSkillCategory].map((skill) => (
+                  <div
+                    key={skill}
+                    style={{
+                      background: 'rgba(10, 19, 37, 0.6)',
+                      border: '1px solid rgba(58, 197, 163, 0.15)',
+                      borderRadius: '10px',
+                      padding: '16px 12px',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      transition: 'transform 0.2s, border-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-3px)';
+                      e.currentTarget.style.borderColor = '#3AC5A3';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.borderColor = 'rgba(58, 197, 163, 0.15)';
+                    }}
+                  >
+                    <img
+                      src={`${import.meta.env.BASE_URL}images/skills/${skill.replace(/[\/\\]/g, '_').toLowerCase()}.png`}
+                      alt={skill}
+                      style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#ffffff' }}>
+                      {skill}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ clear: 'both' }} />
+          </div>
+        </article>
+
+        {/* ─── Section 06: Follow Me / Contact ─── */}
+        <article id="contact">
+          <div className="parallax-container section-flex-container section-flex-reverse">
+            <div className="article-heading-col section-sticky-header">
+              <span className="article-number">06</span>
+              <h1 className="article-heading">
+                <strong>FOLLOW</strong><br />
+                ME
+              </h1>
+            </div>
+
+            <div className="article-content-col section-flex-content">
+              <div className="social-links-grid">
+                <a
+                  href="https://www.linkedin.com/in/yeung-toby/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-link-item"
+                >
+                  <div className="social-link-left">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3AC5A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                      <rect x="2" y="9" width="4" height="12" />
+                      <circle cx="4" cy="4" r="2" />
+                    </svg>
+                    <div>
+                      <div className="social-link-name">LinkedIn</div>
+                      <div className="social-link-handle">linkedin.com/in/yeung-toby</div>
+                    </div>
+                  </div>
+                  <span style={{ color: '#3AC5A3', fontWeight: '600' }}>→</span>
+                </a>
+
+                <a
+                  href="https://github.com/tobyyeung"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-link-item"
+                >
+                  <div className="social-link-left">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3AC5A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.02c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A4.8 4.8 0 0 0 8 18v4" />
+                    </svg>
+                    <div>
+                      <div className="social-link-name">GitHub</div>
+                      <div className="social-link-handle">github.com/tobyyeung</div>
+                    </div>
+                  </div>
+                  <span style={{ color: '#3AC5A3', fontWeight: '600' }}>→</span>
+                </a>
+
+                <a
+                  href="mailto:tobycyeung@gmail.com"
+                  className="social-link-item"
+                >
+                  <div className="social-link-left">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3AC5A3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                    </svg>
+                    <div>
+                      <div className="social-link-name">Email</div>
+                      <div className="social-link-handle">tobycyeung@gmail.com</div>
+                    </div>
+                  </div>
+                  <span style={{ color: '#3AC5A3', fontWeight: '600' }}>→</span>
+                </a>
+              </div>
+            </div>
+            <div style={{ clear: 'both' }} />
+          </div>
+        </article>
+
+        {/* ─── Footer ─── */}
         <footer style={{
-          padding: '1rem',
-          borderTop: '1px solid var(--border-glass)',
-          color: 'var(--text-tertiary)',
-          background: 'var(--bg-primary)'
+          marginTop: '20px',
+          padding: '14px 0 16px 0',
+          borderTop: '1px solid rgba(58, 197, 163, 0.15)',
+          color: '#6b6b75',
+          fontSize: '0.82rem'
         }}>
-          <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '500' }}>
-              <a href="mailto:tobycyeung@gmail.com" style={{ color: 'var(--text-tertiary)', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}>Email</a>
-              <a href="https://www.linkedin.com/in/yeung-toby/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-tertiary)', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}>LinkedIn</a>
-              <a href="https://github.com/tobyyeung" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-tertiary)', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-tertiary)'}>GitHub</a>
-            </div>
-
-            <div style={{ textAlign: 'center', fontSize: '0.8rem', lineHeight: '1.4' }}>
-              <p>Based in Santa Clara, CA</p>
-              <p>&copy; {new Date().getFullYear()} Toby Yeung. All rights reserved.</p>
-            </div>
+          <div className="parallax-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <p style={{ margin: 0 }}>Copyright © 2026 Toby Yeung. All rights reserved.</p>
+            <p style={{ margin: 0 }}>Based in Santa Clara, CA &amp; Champaign, IL</p>
           </div>
         </footer>
-      </main>
-    </>
+      </div>
+    </div>
   );
 };
 
