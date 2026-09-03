@@ -156,7 +156,7 @@ const loadGoogleMapsScript = (apiKey) => {
       return;
     }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.google.maps);
@@ -191,18 +191,15 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     };
   }, []);
 
-  // Initialize Map with Vector Rendering & WebGL for ultra-crisp resolution
+  // Initialize Map
   useEffect(() => {
     if (!mapsLoaded || !containerRef.current || mapInstanceRef.current || !window.google?.maps) return;
 
     const google = window.google;
 
-    // Vector map rendering: WebGL GPU acceleration for 60fps pan and crisp lines
     const map = new google.maps.Map(containerRef.current, {
       center: US_CENTER,
       zoom: US_ZOOM,
-      mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID',
-      renderingType: 'VECTOR',
       isFractionalZoomEnabled: true,
       disableDefaultUI: true,
       gestureHandling: 'none',
