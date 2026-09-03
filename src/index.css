@@ -1060,6 +1060,51 @@ button {
   border-color: rgba(0, 0, 0, 0.1);
 }
 
+.detail-modal-backdrop {
+  animation: detailBackdropIn 300ms ease both;
+}
+
+.detail-modal-panel {
+  transform-origin: center;
+}
+
+.detail-modal-backdrop.is-closing {
+  animation: detailBackdropOut 450ms ease both;
+}
+
+.detail-modal-backdrop.is-closing .detail-modal-panel {
+  pointer-events: none;
+}
+
+@keyframes detailBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes detailBackdropOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes detailZoomIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes detailZoomOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.88); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-modal-backdrop,
+  .detail-modal-panel,
+  .detail-modal-backdrop.is-closing,
+  .detail-modal-backdrop.is-closing .detail-modal-panel {
+    animation: none;
+  }
+}
+
 @keyframes expModalFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

@@ -209,7 +209,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        onClick={() => onSelect(exp)}
+        onClick={(event) => onSelect(exp, event.currentTarget)}
       >
         <div
           className="timeline-parallax-card"

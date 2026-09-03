@@ -12,6 +12,7 @@ import { skillsData } from '../data/skills';
 const Home = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedExperience, setSelectedExperience] = useState(null);
+  const [detailSource, setDetailSource] = useState(null);
   const [activeSkillCategory, setActiveSkillCategory] = useState("Languages");
   const [showAllUiucCourses, setShowAllUiucCourses] = useState(false);
 
@@ -57,10 +58,12 @@ const Home = () => {
       {/* Experience & Project Detail Modals */}
       <ExperienceModal
         exp={selectedExperience}
+        sourceElement={detailSource}
         onClose={() => setSelectedExperience(null)}
       />
       <ProjectModal
         project={selectedProject}
+        sourceElement={detailSource}
         onClose={() => setSelectedProject(null)}
       />
 
@@ -152,12 +155,18 @@ const Home = () => {
 
         {/* ─── Section 02: Experience (One Experience Per Scroll with Cinematic Map Flight) ─── */}
         <div id="experience" style={{ position: 'relative', width: '100%', marginTop: '-4px' }}>
-          <ParallaxExperienceTimeline onSelectExperience={setSelectedExperience} />
+          <ParallaxExperienceTimeline onSelectExperience={(exp, source) => {
+            setDetailSource(source);
+            setSelectedExperience(exp);
+          }} />
         </div>
 
         {/* ─── Section 03: Works × Projects (Pinned Horizontal Scroll) ─── */}
         <div id="projects" style={{ position: 'relative', width: '100%', marginTop: '-4px' }}>
-          <ParallaxProjectsShowcase onSelectProject={setSelectedProject} />
+          <ParallaxProjectsShowcase onSelectProject={(project, source) => {
+            setDetailSource(source);
+            setSelectedProject(project);
+          }} />
         </div>
 
         {/* ─── Section 04: Education ─── */}

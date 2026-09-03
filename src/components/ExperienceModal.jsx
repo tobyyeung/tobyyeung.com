@@ -1,29 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useBreakpoints } from '../hooks/useBreakpoints';
+import { useDetailModalMotion } from '../hooks/useDetailModalMotion';
 
-const ExperienceModal = ({ exp, onClose }) => {
+const ExperienceModal = ({ exp, onClose, sourceElement }) => {
   const { isTablet } = useBreakpoints();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const { isClosing, requestClose, panelRef } = useDetailModalMotion(exp, onClose, sourceElement);
 
   // Reset image index when experience changes
   useEffect(() => {
     setCurrentImgIndex(0);
   }, [exp]);
-
-  // Lock body scroll and listen for Escape key
-  useEffect(() => {
-    if (exp) {
-      document.body.style.overflow = 'hidden';
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') onClose();
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.body.style.overflow = 'unset';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [exp, onClose]);
 
   if (!exp) return null;
 
@@ -49,32 +37,33 @@ const ExperienceModal = ({ exp, onClose }) => {
   const isBlue = exp.id === 'mathnasium' || exp.id === 'techknowhow_asst';
   const accentColor = isGreen ? 'var(--accent-primary)' : (isBlue ? '#38bdf8' : 'var(--accent-secondary)');
 
-  return (
+  return createPortal(
     <div
+      className={`detail-modal-backdrop${isClosing ? ' is-closing' : ''}`}
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.55)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        zIndex: 99999,
+        backgroundColor: 'rgba(2, 7, 22, 0.18)',
+        zIndex: 100010,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1rem',
-        animation: 'expModalFadeIn 0.2s ease-out forwards'
       }}
-      onClick={onClose}
+      onClick={requestClose}
     >
       {/* Modal Container - Translucent & Compact */}
       <div
+        className="detail-modal-panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={exp.title}
         style={{
-          background: 'var(--bg-glass, rgba(10, 19, 37, 0.90))',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background: 'color-mix(in srgb, var(--bg-primary, #0a1325) 74%, transparent)',
           color: 'var(--text-primary, #ffffff)',
           borderRadius: '16px',
           border: '1px solid var(--border-glass, rgba(58, 197, 163, 0.25))',
@@ -83,7 +72,6 @@ const ExperienceModal = ({ exp, onClose }) => {
           maxHeight: '68vh',
           position: 'relative',
           boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.6)',
-          animation: 'expModalSlideUp 0.25s ease-out forwards',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -93,7 +81,7 @@ const ExperienceModal = ({ exp, onClose }) => {
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={requestClose}
           style={{
             position: 'absolute',
             top: '0.85rem',
@@ -387,7 +375,8 @@ const ExperienceModal = ({ exp, onClose }) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

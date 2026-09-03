@@ -1,44 +1,42 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { createPortal } from 'react-dom';
+import { useDetailModalMotion } from '../hooks/useDetailModalMotion';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
-const ProjectModal = ({ project, onClose }) => {
+const ProjectModal = ({ project, onClose, sourceElement }) => {
   const { isTablet } = useBreakpoints();
 
-  // Prevent scrolling on the body when modal is open
-  useEffect(() => {
-    if (project) {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
-    }
-  }, [project]);
+  const { isClosing, requestClose, panelRef } = useDetailModalMotion(project, onClose, sourceElement);
 
   if (!project) return null;
 
-  return (
-    <div 
+  return createPortal(
+    <div
+      className={`detail-modal-backdrop${isClosing ? ' is-closing' : ''}`}
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 1000,
+        backgroundColor: 'rgba(2, 7, 22, 0.18)',
+        zIndex: 100010,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1rem',
-        animation: 'fadeIn 0.2s ease-out forwards'
       }}
-      onClick={onClose}
+      onClick={requestClose}
     >
       {/* Modal Content container */}
-      <div 
+      <div
+        className="detail-modal-panel"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={project.title}
         style={{
-          background: 'var(--bg-primary)',
+          background: 'color-mix(in srgb, var(--bg-primary) 74%, transparent)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-glass)',
           width: '100%',
@@ -47,7 +45,6 @@ const ProjectModal = ({ project, onClose }) => {
           overflowY: 'auto',
           position: 'relative',
           boxShadow: 'var(--shadow-lg)',
-          animation: 'slideUp 0.3s ease-out forwards',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -56,7 +53,7 @@ const ProjectModal = ({ project, onClose }) => {
       >
         {/* Close Button */}
         <button 
-          onClick={onClose}
+          onClick={requestClose}
           style={{
             position: 'absolute',
             top: '1rem',
@@ -166,7 +163,8 @@ const ProjectModal = ({ project, onClose }) => {
           font-weight: 700;
         }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 };
 

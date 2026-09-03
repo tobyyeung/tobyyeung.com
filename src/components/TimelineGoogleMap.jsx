@@ -88,12 +88,13 @@ const TIMELINE_MAP_BRIGHT_STYLE = [
 
 // Calculate target camera center with desktop card offset
 const getAdjustedCenter = (lat, lng, map, experienceId, zoom = TARGET_ZOOM) => {
-  if (window.innerWidth <= 1150 && map) {
+  const mapDiv = map?.getDiv?.();
+  if (window.innerWidth <= 1150 && mapDiv instanceof Element) {
     const projection = map.getProjection();
-    const node = map.getDiv().closest('.experience-sticky-viewport')
+    const node = mapDiv.closest('.experience-sticky-viewport')
       ?.querySelector(`[data-experience-id="${experienceId}"]`);
     if (projection && node) {
-      const viewport = map.getDiv().getBoundingClientRect();
+      const viewport = mapDiv.getBoundingClientRect();
       const marker = node.getBoundingClientRect();
       const city = projection.fromLatLngToPoint(new window.google.maps.LatLng(lat, lng));
       const scale = 2 ** zoom;
@@ -145,6 +146,8 @@ const animateCamera = (
 
   const tick = (now) => {
     if (isCancelled) return;
+    // Authentication failures can invalidate a map while a flight is running.
+    if (!(map.getDiv?.() instanceof Element)) return;
     const elapsed = now - start;
     const progress = Math.min(1, elapsed / durationMs);
     const shouldPaint = elapsed - lastFrame >= CAMERA_FRAME_MS || progress === 1;
@@ -321,7 +324,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
   // Robust, Glitch-Proof Camera Flight Transitions
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !window.google?.maps) return;
+    if (!map || !window.google?.maps || !(map.getDiv?.() instanceof Element)) return;
 
     const fly = (options) => animateCamera(map, options, () => {
       const city = LOCATION_COORDS[activeExpId];
@@ -439,17 +442,19 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
   useEffect(() => {
     const map = mapInstanceRef.current;
     const city = LOCATION_COORDS[activeExpId];
-    if (!map || !city) return undefined;
+    const container = containerRef.current;
+    if (!map || !city || !(container instanceof Element)) return undefined;
     let timer;
     const align = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
+        if (mapInstanceRef.current !== map || !(map.getDiv?.() instanceof Element)) return;
         map.setCenter(getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
       }, 3200);
     };
     const observer = new ResizeObserver(align);
-    observer.observe(map.getDiv());
-    const stage = map.getDiv().closest('.experience-sticky-viewport')?.querySelector('.timeline-overlay-stage');
+    observer.observe(container);
+    const stage = container.closest('.experience-sticky-viewport')?.querySelector('.timeline-overlay-stage');
     if (stage) observer.observe(stage);
     window.addEventListener('resize', align);
     return () => {

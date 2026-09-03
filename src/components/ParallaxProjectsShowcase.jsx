@@ -36,7 +36,7 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      onClick={() => onSelect(project)}
+      onClick={(event) => onSelect(project, event.currentTarget)}
     >
       <div
         className="horizontal-project-card"
