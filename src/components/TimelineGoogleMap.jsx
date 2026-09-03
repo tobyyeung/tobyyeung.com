@@ -340,7 +340,8 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
       />
 
       <style>{`
-        .gmnoprint, .gm-style-cc, a[href^="https://maps.google.com/maps"] {
+        .gmnoprint, .gm-style-cc, a[href^="https://maps.google.com/maps"],
+        .gm-err-container, .gm-err-autocomplete, .gm-err-message, div[aria-label="Map error"] {
           display: none !important;
         }
         @keyframes mapPulse {
