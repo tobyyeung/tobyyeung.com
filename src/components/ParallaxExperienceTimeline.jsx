@@ -56,6 +56,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
       {/* ── Center Spine Marker Node (Geographic Location Pin on the Map) ── */}
       <div
         className="timeline-spine-node"
+        data-experience-id={exp.id}
         style={{
           position: 'absolute',
           left: '50%',
@@ -161,7 +162,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
         <span
           style={{
             fontFamily: "'Oswald', sans-serif",
-            fontSize: '1.25rem',
+            fontSize: 'clamp(0.8rem, 1.5vw, 1.25rem)',
             fontWeight: '700',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
@@ -170,7 +171,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
             border: '1.5px solid #00f0ff',
             padding: '6px 18px',
             borderRadius: '8px',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'normal',
             boxShadow: '0 0 20px rgba(0, 240, 255, 0.35), 0 8px 24px rgba(0,0,0,0.7)'
           }}
         >
@@ -179,7 +180,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
         {/* Location badge positioned clearly under the milestone date */}
         <span
           style={{
-            fontSize: '0.86rem',
+            fontSize: 'clamp(0.7rem, 1vw, 0.86rem)',
             fontWeight: '600',
             color: '#3AC5A3',
             letterSpacing: '0.06em',
@@ -189,7 +190,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
             padding: '4px 14px',
             borderRadius: '6px',
             boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'normal'
           }}
         >
           📍 {cityInfo.city}
@@ -200,9 +201,9 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
       <div
         className="timeline-card-wrapper"
         style={{
-          width: 'calc(50% - clamp(40px, 5.5vw, 85px))',
-          marginLeft: isLeft ? '0' : 'auto',
-          marginRight: isLeft ? 'auto' : '0',
+          width: 'calc(42% - clamp(40px, 5.5vw, 85px))',
+          marginLeft: isLeft ? '8%' : 'auto',
+          marginRight: isLeft ? 'auto' : '8%',
           perspective: '1200px'
         }}
         onMouseEnter={() => setIsHovered(true)}
@@ -216,7 +217,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
             background: isHovered ? 'rgba(10, 24, 48, 0.98)' : 'rgba(8, 18, 38, 0.92)',
             border: `1.8px solid ${isHovered ? '#3AC5A3' : 'rgba(58, 197, 163, 0.5)'}`,
             borderRadius: '18px',
-            padding: '28px 32px',
+            padding: 'clamp(12px, 2.2vmin, 28px) clamp(14px, 2.5vmin, 32px)',
             cursor: 'pointer',
             boxShadow: isHovered
               ? '0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(58, 197, 163, 0.35)'
@@ -256,8 +257,8 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div
                 style={{
-                  width: '50px',
-                  height: '50px',
+                  width: 'clamp(28px, 4vmin, 50px)',
+                  height: 'clamp(28px, 4vmin, 50px)',
                   borderRadius: '12px',
                   background: '#ffffff',
                   padding: '4px',
@@ -280,7 +281,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
                 <h3
                   style={{
                     fontFamily: "'Oswald', sans-serif",
-                    fontSize: '1.6rem',
+                    fontSize: 'clamp(1rem, 2.1vmin, 1.6rem)',
                     fontWeight: '700',
                     color: '#ffffff',
                     letterSpacing: '0.04em',
@@ -295,7 +296,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
                   <span
                     style={{
                       color: '#3AC5A3',
-                      fontSize: '1.02rem',
+                      fontSize: 'clamp(0.8rem, 1.5vmin, 1.02rem)',
                       fontWeight: '600',
                       fontFamily: "'Inter', sans-serif"
                     }}
@@ -330,7 +331,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
           {/* Description Paragraph */}
           <p
             style={{
-              fontSize: '1rem',
+              fontSize: 'clamp(0.8rem, 1.5vmin, 1rem)',
               lineHeight: '1.65',
               color: 'rgba(255, 255, 255, 0.9)',
               marginBottom: '20px',
@@ -571,6 +572,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
 
         {/* ── Top Bar with Indicator, Step Controls & Progress (Floating Header) ── */}
         <div
+          className="timeline-overlay-header"
           style={{
             position: 'absolute',
             top: 0,
@@ -628,12 +630,12 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
 
         {/* ── Main Stage: Central Spine & Exactly 1 Highlighted Experience (Exact 50vh alignment with map) ── */}
         <div
+          className="timeline-overlay-stage"
           style={{
             position: 'absolute',
-            inset: 0,
+            top: 0,
+            bottom: 0,
             width: '100%',
-            maxWidth: '1280px',
-            margin: '0 auto',
             left: '50%',
             transform: 'translateX(-50%)',
             padding: '0 clamp(20px, 4vw, 50px)',
@@ -705,9 +707,10 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
 
         {/* ── Vertical Milestone Bullets (Right side indicator) ── */}
         <div
+          className="timeline-milestone-navigation"
           style={{
             position: 'absolute',
-            right: '24px',
+            right: 'clamp(8px, 1.8vw, 24px)',
             top: '50%',
             transform: 'translateY(-50%)',
             display: 'flex',

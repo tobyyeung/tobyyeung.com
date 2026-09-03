@@ -87,7 +87,23 @@ const TIMELINE_MAP_BRIGHT_STYLE = [
 ];
 
 // Calculate target camera center with desktop card offset
-const getAdjustedCenter = (lat, lng) => {
+const getAdjustedCenter = (lat, lng, map, experienceId, zoom = TARGET_ZOOM) => {
+  if (window.innerWidth <= 1150 && map) {
+    const projection = map.getProjection();
+    const node = map.getDiv().closest('.experience-sticky-viewport')
+      ?.querySelector(`[data-experience-id="${experienceId}"]`);
+    if (projection && node) {
+      const viewport = map.getDiv().getBoundingClientRect();
+      const marker = node.getBoundingClientRect();
+      const city = projection.fromLatLngToPoint(new window.google.maps.LatLng(lat, lng));
+      const scale = 2 ** zoom;
+      const center = projection.fromPointToLatLng(new window.google.maps.Point(
+        city.x + (viewport.width / 2 - (marker.left + marker.width / 2 - viewport.left)) / scale,
+        city.y + (viewport.height / 2 - (marker.top + marker.height / 2 - viewport.top)) / scale
+      ));
+      return { lat: center.lat(), lng: center.lng() };
+    }
+  }
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
   const lngShift = isDesktop ? -0.055 : 0;
   return {
@@ -307,6 +323,13 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     const map = mapInstanceRef.current;
     if (!map || !window.google?.maps) return;
 
+    const fly = (options) => animateCamera(map, options, () => {
+      const city = LOCATION_COORDS[activeExpId];
+      if (city && window.innerWidth <= 1150) {
+        map.setCenter(getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
+      }
+    });
+
     if (cancelPanRef.current) {
       cancelPanRef.current();
       cancelPanRef.current = null;
@@ -318,7 +341,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     // Case 1: Scrolled back above Experience section → return to US overview
     if (!activeExpId) {
       const currentCenter = map.getCenter();
-      cancelPanRef.current = animateCamera(map, {
+      cancelPanRef.current = fly({
         fromCenter: currentCenter
           ? { lat: currentCenter.lat(), lng: currentCenter.lng() }
           : US_CENTER,
@@ -334,11 +357,11 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     if (!rawTarget) return;
 
     // Adjusted target coordinate considering layout
-    const targetLoc = getAdjustedCenter(rawTarget.lat, rawTarget.lng);
+    const targetLoc = getAdjustedCenter(rawTarget.lat, rawTarget.lng, map, activeExpId);
 
     // Initial entry into Experiences section: clean, direct flight into Illinois
     if (!prevId) {
-      cancelPanRef.current = animateCamera(map, {
+      cancelPanRef.current = fly({
         fromCenter: US_CENTER,
         toCenter: targetLoc,
         fromZoom: US_ZOOM,
@@ -365,7 +388,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
       CALIFORNIA_EXPERIENCE_IDS.has(activeExpId);
 
     if (isCaliforniaToCalifornia) {
-      cancelPanRef.current = animateCamera(map, {
+      cancelPanRef.current = fly({
         fromCenter: fromCoord,
         toCenter: targetLoc,
         fromZoom: currentZoom,
@@ -377,7 +400,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
 
     // Case 2: Local campus move (< 20 km — Champaign ↔ Urbana)
     if (distanceKm < 20) {
-      cancelPanRef.current = animateCamera(map, {
+      cancelPanRef.current = fly({
         fromCenter: fromCoord,
         toCenter: targetLoc,
         fromZoom: currentZoom,
@@ -389,7 +412,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
 
     // Case 3: Regional move (< 180 km — California Bay Area)
     if (distanceKm < 180) {
-      cancelPanRef.current = animateCamera(map, {
+      cancelPanRef.current = fly({
         fromCenter: fromCoord,
         toCenter: targetLoc,
         fromZoom: currentZoom,
@@ -401,7 +424,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     }
 
     // Case 4: Long distance (> 180 km — Illinois ↔ California ↔ Maryland)
-    cancelPanRef.current = animateCamera(map, {
+    cancelPanRef.current = fly({
       fromCenter: fromCoord,
       toCenter: targetLoc,
       fromZoom: currentZoom,
@@ -410,6 +433,30 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
       flightZoom: FLIGHT_ZOOM
     });
 
+  }, [activeExpId, mapsLoaded]);
+
+  // Re-align after responsive layout or header sizing changes, once flights settle.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const city = LOCATION_COORDS[activeExpId];
+    if (!map || !city) return undefined;
+    let timer;
+    const align = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        map.setCenter(getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
+      }, 3200);
+    };
+    const observer = new ResizeObserver(align);
+    observer.observe(map.getDiv());
+    const stage = map.getDiv().closest('.experience-sticky-viewport')?.querySelector('.timeline-overlay-stage');
+    if (stage) observer.observe(stage);
+    window.addEventListener('resize', align);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+      window.removeEventListener('resize', align);
+    };
   }, [activeExpId, mapsLoaded]);
 
   return (

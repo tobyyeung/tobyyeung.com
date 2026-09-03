@@ -972,8 +972,8 @@
 }
 
 .timeline-center-nav-button {
-  width: 38px;
-  height: 38px;
+  width: clamp(38px, 4.5vmin, 52px);
+  height: clamp(38px, 4.5vmin, 52px);
   padding: 0;
   display: grid;
   place-items: center;
@@ -1017,38 +1017,212 @@
 }
 
 @media screen and (max-width: 860px) {
-  .timeline-center-navigation {
-    left: 20px;
-  }
-
   .timeline-central-spine {
-    left: 20px !important;
-    transform: none !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
   }
 
   .timeline-spine-node {
-    left: 20px !important;
+    left: 50% !important;
+    top: 25% !important;
   }
 
   .timeline-connector-line {
-    left: 20px !important;
-    right: auto !important;
-    width: 25px !important;
+    display: none;
   }
 
   .timeline-opposite-date {
-    display: none !important;
+    top: 12% !important;
+    left: 50% !important;
+    right: auto !important;
+    width: 80%;
+    align-items: center !important;
+    text-align: center;
+    transform: translateX(-50%) !important;
+    gap: 4px !important;
   }
 
   .timeline-card-wrapper {
-    width: calc(100% - 55px) !important;
-    margin-left: 55px !important;
-    margin-right: 0 !important;
-    transform: none !important;
+    position: absolute;
+    top: 32%;
+    left: 50%;
+    width: min(78%, 480px) !important;
+    margin: 0 !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .timeline-parallax-card {
+    max-height: 40vh;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .timeline-overlay-header {
+    padding: 12px 4vw !important;
+  }
+
+  .timeline-overlay-header > div {
+    gap: 8px !important;
   }
 
   .timeline-item-row {
     margin: 24px 0 !important;
+  }
+}
+
+.timeline-overlay-stage {
+  box-sizing: border-box;
+}
+
+.timeline-overlay-header {
+  top: calc(var(--site-header-height, 70px) + 1vh) !important;
+}
+
+.timeline-opposite-date {
+  max-width: calc(50% - clamp(40px, 5vw, 80px) - 4vw);
+  overflow-wrap: anywhere;
+}
+
+.timeline-card-wrapper {
+  min-width: 0;
+}
+
+.timeline-parallax-card {
+  box-sizing: border-box;
+  max-height: 70vh;
+  overflow-y: auto !important;
+  overflow-wrap: anywhere;
+}
+
+/* Compact windows share one layout below the measured site header. Labels,
+   marker and card occupy grid rows instead of unrelated viewport percentages. */
+@media screen and (max-width: 1150px), screen and (max-height: 600px) {
+  .timeline-overlay-header {
+    padding: 10px 4vw !important;
+  }
+
+  .timeline-overlay-header > div {
+    gap: 8px !important;
+  }
+
+  .timeline-overlay-stage {
+    top: calc(var(--site-header-height, 70px) + 76px) !important;
+    bottom: calc(20vh + 64px) !important;
+    padding: 0 !important;
+  }
+
+  .stepped-exp-card-container {
+    display: grid !important;
+    grid-template-rows: auto 42px minmax(0, 1fr);
+    justify-items: center;
+    align-items: stretch !important;
+    gap: 10px;
+    padding: 0 clamp(30px, 5vw, 64px);
+    box-sizing: border-box;
+  }
+
+  .timeline-central-spine {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .timeline-connector-line { display: none; }
+
+  .timeline-opposite-date {
+    position: relative !important;
+    grid-row: 1;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100%;
+    max-width: 480px;
+    align-items: center !important;
+    text-align: center;
+    gap: 4px !important;
+    transform: none !important;
+  }
+
+  .timeline-spine-node {
+    position: relative !important;
+    grid-row: 2;
+    top: auto !important;
+    left: auto !important;
+    align-self: center;
+    transform: none !important;
+  }
+
+  .timeline-card-wrapper {
+    position: relative;
+    grid-row: 3;
+    top: auto;
+    left: auto;
+    width: min(100%, 480px) !important;
+    min-height: 0;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .timeline-parallax-card {
+    max-height: 100%;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .timeline-milestone-navigation {
+    right: 6px !important;
+    gap: clamp(6px, 1.2vh, 12px) !important;
+  }
+}
+
+@media screen and (max-height: 600px) {
+  .timeline-center-navigation { bottom: 4vh; }
+  .timeline-overlay-stage { bottom: calc(4vh + 54px) !important; }
+  .timeline-opposite-date > div { display: none; }
+  .stepped-exp-card-container { grid-template-rows: auto 32px minmax(0, 1fr); gap: 4px; }
+}
+
+/* Narrow screens: reserve a small left rail and give the content the rest. */
+@media screen and (max-width: 1150px) {
+  .stepped-exp-card-container {
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 12px;
+    padding: 0 30px 0 12px;
+    justify-items: stretch;
+  }
+
+  .timeline-central-spine {
+    left: 34px !important;
+  }
+
+  .timeline-center-navigation {
+    left: 34px;
+  }
+
+  .timeline-spine-node {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+    align-self: start;
+    margin-top: 18px;
+  }
+
+  .timeline-opposite-date {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    max-width: 100%;
+    align-items: flex-start !important;
+    text-align: left;
+  }
+
+  .timeline-card-wrapper {
+    grid-column: 2;
+    grid-row: 2;
+    width: 88% !important;
+    max-width: 560px;
+    justify-self: start;
   }
 }
 

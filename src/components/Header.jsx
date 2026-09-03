@@ -14,10 +14,24 @@ const NAV_SECTIONS = [
 
 const Header = () => {
   const location = useLocation();
-  const { isTablet: isMobile } = useBreakpoints();
+  const { windowWidth } = useBreakpoints();
+  const isMobile = windowWidth <= 1100;
   const [activeSection, setActiveSection] = useState('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Share the actual navigation height with full-screen section overlays.
+  useEffect(() => {
+    const header = document.querySelector('header');
+    if (!header) return undefined;
+    const updateHeight = () => {
+      document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   // Precise active section detection based on viewport position
   useEffect(() => {
@@ -37,6 +51,13 @@ const Header = () => {
       const header = document.querySelector('header');
       const headerHeight = header ? header.offsetHeight : 70;
       const anchorY = window.innerHeight * 0.38;
+
+      const runway = document.querySelector('.experience-stepped-runway');
+      const runwayRect = runway?.getBoundingClientRect();
+      if (runwayRect && runwayRect.top <= 1 && runwayRect.bottom >= window.innerHeight - 1) {
+        setActiveSection('experience');
+        return;
+      }
 
       if (aboutEl) {
         const aboutRect = aboutEl.getBoundingClientRect();
@@ -67,8 +88,12 @@ const Header = () => {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
   }, []);
 
   const scrollToSection = (id) => {
@@ -88,8 +113,14 @@ const Header = () => {
       if (element) {
         const header = document.querySelector('header');
         const headerHeight = header ? header.offsetHeight : 70;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 12;
+        const target = id === 'experience'
+          ? element.querySelector('.experience-stepped-runway') || element
+          : element;
+        const elementPosition = target.getBoundingClientRect().top;
+        // The timeline has a multi-screen runway, but its stage pins at top: 0.
+        // Land at the start of that runway, not a header-offset partial screen.
+        const offsetPosition = elementPosition + window.pageYOffset -
+          (id === 'experience' ? 0 : headerHeight + 12);
 
         window.scrollTo({
           top: Math.max(0, offsetPosition),
