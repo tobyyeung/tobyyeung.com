@@ -12,10 +12,18 @@ export const LOCATION_COORDS = {
   'kesselworks': { lat: 39.4673, lng: -76.2625, city: 'Abingdon, Maryland' }
 };
 
+const CALIFORNIA_EXPERIENCE_IDS = new Set([
+  'mathnasium',
+  'techknowhow_lead',
+  'thecoderschool',
+  'techknowhow_asst'
+]);
+
 const US_CENTER = { lat: 39.5, lng: -96.0 };
 const US_ZOOM = 4;
-const MID_ZOOM = 7;
 const TARGET_ZOOM = 11; // Deep city zoom
+const FLIGHT_ZOOM = 5;
+const CAMERA_FRAME_MS = 1000 / 30;
 
 // Vibrant cyber dark map styles: High brightness, glowing state & country borders
 const TIMELINE_MAP_BRIGHT_STYLE = [
@@ -78,20 +86,10 @@ const TIMELINE_MAP_BRIGHT_STYLE = [
   }
 ];
 
-// Helper to shift map center on desktop so pin lands on the OPPOSITE side of the active card
-const getShiftedCenter = (map, lat, lng, zoom, cardIsOnLeft = true) => {
-  if (typeof window === 'undefined' || window.innerWidth < 860) {
-    return { lat, lng };
-  }
-  const containerWidth = map?.getDiv?.()?.offsetWidth || window.innerWidth || 1200;
-  // Shift by 24% of container width so the pin is positioned in the center of the opposite half
-  const shiftPixels = containerWidth * 0.24;
-  const degreesPerPixelLng = 360 / (256 * Math.pow(2, zoom));
-
-  const lngShift = cardIsOnLeft
-    ? -shiftPixels * degreesPerPixelLng
-    : +shiftPixels * degreesPerPixelLng;
-
+// Calculate target camera center with desktop card offset
+const getAdjustedCenter = (lat, lng) => {
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const lngShift = isDesktop ? -0.055 : 0;
   return {
     lat,
     lng: lng + lngShift
@@ -114,37 +112,89 @@ const getDistanceKm = (loc1, loc2) => {
   return R * c;
 };
 
-// Smooth 60fps Camera Pan only — no zoom during flight to avoid tile reload lag
-const smoothPan = (map, fromCoord, toCoord, durationMs, onDone) => {
+// Google Maps is expensive to redraw. A capped 30fps camera path stays smooth
+// while avoiding the tile churn caused by calling setCenter on every RAF.
+const animateCamera = (
+  map,
+  { fromCenter, toCenter, fromZoom, toZoom, durationMs, flightZoom = null },
+  onDone
+) => {
   const start = performance.now();
-  const easeInOutSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
+  const easeInOutCubic = (t) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
   let animId;
+  let isCancelled = false;
+  let lastFrame = -CAMERA_FRAME_MS;
+
   const tick = (now) => {
+    if (isCancelled) return;
     const elapsed = now - start;
     const progress = Math.min(1, elapsed / durationMs);
-    const eased = easeInOutSine(progress);
+    const shouldPaint = elapsed - lastFrame >= CAMERA_FRAME_MS || progress === 1;
 
-    const lat = fromCoord.lat + (toCoord.lat - fromCoord.lat) * eased;
-    const lng = fromCoord.lng + (toCoord.lng - fromCoord.lng) * eased;
+    if (shouldPaint) {
+      const eased = easeInOutCubic(progress);
+      let centerProgress = eased;
 
-    map.setCenter({ lat, lng });
+      if (flightZoom !== null) {
+        // Keep the origin still while zooming out so the lower-detail tiles can
+        // render, then travel only during the cruise portion of the flight.
+        if (progress < 0.5) {
+          centerProgress = 0;
+        } else if (progress < 0.75) {
+          centerProgress = easeInOutCubic((progress - 0.5) / 0.25);
+        } else {
+          centerProgress = 1;
+        }
+      }
+
+      const center = {
+        lat: fromCenter.lat + (toCenter.lat - fromCenter.lat) * centerProgress,
+        lng: fromCenter.lng + (toCenter.lng - fromCenter.lng) * centerProgress
+      };
+      let zoom = fromZoom + (toZoom - fromZoom) * eased;
+
+      if (flightZoom !== null) {
+        // Ease down, pause at altitude while tiles settle, travel, then zoom in.
+        if (progress < 0.4) {
+          zoom = fromZoom + (flightZoom - fromZoom) * easeInOutCubic(progress / 0.4);
+        } else if (progress < 0.75) {
+          zoom = flightZoom;
+        } else {
+          zoom = flightZoom + (toZoom - flightZoom) * easeInOutCubic((progress - 0.75) / 0.25);
+        }
+      }
+
+      map.moveCamera({ center, zoom });
+      lastFrame = elapsed;
+    }
 
     if (progress < 1) {
       animId = requestAnimationFrame(tick);
     } else {
-      map.setCenter({ lat: toCoord.lat, lng: toCoord.lng });
+      map.moveCamera({ center: toCenter, zoom: toZoom });
       if (onDone) onDone();
     }
   };
 
   animId = requestAnimationFrame(tick);
-  return () => cancelAnimationFrame(animId);
+  return () => {
+    isCancelled = true;
+    cancelAnimationFrame(animId);
+  };
 };
 
-// Script loader helper
+let googleMapsPromise;
+const GOOGLE_MAPS_CALLBACK = '__timelineGoogleMapsReady';
+
+// Cache one loader promise across mounts and omit unused libraries to keep the
+// initial download and parse cost as small as possible.
 const loadGoogleMapsScript = (apiKey) => {
-  return new Promise((resolve, reject) => {
+  if (window.google?.maps) return Promise.resolve(window.google.maps);
+  if (googleMapsPromise) return googleMapsPromise;
+
+  googleMapsPromise = new Promise((resolve, reject) => {
     if (window.google && window.google.maps) {
       resolve(window.google.maps);
       return;
@@ -152,29 +202,65 @@ const loadGoogleMapsScript = (apiKey) => {
     const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
     if (existing) {
       existing.addEventListener('load', () => resolve(window.google.maps));
-      existing.addEventListener('error', reject);
+      existing.addEventListener('error', (error) => {
+        googleMapsPromise = null;
+        reject(error);
+      });
       return;
     }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    window[GOOGLE_MAPS_CALLBACK] = () => {
+      delete window[GOOGLE_MAPS_CALLBACK];
+      resolve(window.google.maps);
+    };
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&loading=async&callback=${GOOGLE_MAPS_CALLBACK}`;
     script.async = true;
-    script.defer = true;
-    script.onload = () => resolve(window.google.maps);
-    script.onerror = reject;
+    script.onerror = (error) => {
+      delete window[GOOGLE_MAPS_CALLBACK];
+      googleMapsPromise = null;
+      reject(error);
+    };
     document.head.appendChild(script);
   });
+
+  return googleMapsPromise;
 };
 
 const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
   const containerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const prevExpIdRef = useRef(null);
-  const timeoutsRef = useRef([]);
   const cancelPanRef = useRef(null);
   const [mapsLoaded, setMapsLoaded] = useState(false);
+  const [shouldLoadMap, setShouldLoadMap] = useState(false);
+
+  // Start loading shortly before the timeline enters view. This keeps Google
+  // Maps off the critical path for the top of the portfolio.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof IntersectionObserver === 'undefined') {
+      setShouldLoadMap(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadMap(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '700px 0px' }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Load API script
   useEffect(() => {
+    if (!shouldLoadMap) return undefined;
+
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
     let isMounted = true;
 
@@ -189,7 +275,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [shouldLoadMap]);
 
   // Initialize Map
   useEffect(() => {
@@ -211,17 +297,15 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     mapInstanceRef.current = map;
 
     return () => {
+      cancelPanRef.current?.();
       mapInstanceRef.current = null;
     };
-  }, [mapsLoaded, onSelectExperience]);
+  }, [mapsLoaded]);
 
-  // Fast, Low-Churn Camera Flight Transitions
+  // Robust, Glitch-Proof Camera Flight Transitions
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !window.google?.maps) return;
-
-    timeoutsRef.current.forEach(clearTimeout);
-    timeoutsRef.current = [];
 
     if (cancelPanRef.current) {
       cancelPanRef.current();
@@ -231,58 +315,100 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     const prevId = prevExpIdRef.current;
     prevExpIdRef.current = activeExpId;
 
-    // Case 1: Scrolled back above Experience section → pull back to US overview
+    // Case 1: Scrolled back above Experience section → return to US overview
     if (!activeExpId) {
-      map.setZoom(US_ZOOM);
-      map.panTo(US_CENTER);
+      const currentCenter = map.getCenter();
+      cancelPanRef.current = animateCamera(map, {
+        fromCenter: currentCenter
+          ? { lat: currentCenter.lat(), lng: currentCenter.lng() }
+          : US_CENTER,
+        toCenter: US_CENTER,
+        fromZoom: map.getZoom() || TARGET_ZOOM,
+        toZoom: US_ZOOM,
+        durationMs: 700
+      });
       return;
     }
 
-    const targetLoc = LOCATION_COORDS[activeExpId];
-    if (!targetLoc) return;
+    const rawTarget = LOCATION_COORDS[activeExpId];
+    if (!rawTarget) return;
+
+    // Adjusted target coordinate considering layout
+    const targetLoc = getAdjustedCenter(rawTarget.lat, rawTarget.lng);
 
     // Initial entry into Experiences section: clean, direct flight into Illinois
     if (!prevId) {
-      cancelPanRef.current = smoothPan(map, US_CENTER, targetLoc, 1000);
-      const ti1 = setTimeout(() => map.setZoom(8), 500);
-      const ti2 = setTimeout(() => map.setZoom(TARGET_ZOOM), 1100);
-      timeoutsRef.current.push(ti1, ti2);
+      cancelPanRef.current = animateCamera(map, {
+        fromCenter: US_CENTER,
+        toCenter: targetLoc,
+        fromZoom: US_ZOOM,
+        toZoom: TARGET_ZOOM,
+        durationMs: 1050
+      });
       return;
     }
 
-    // Live camera position
+    // Capture the REAL live camera position and zoom at this exact millisecond
     const currentCenter = map.getCenter();
     const fromCoord = currentCenter
       ? { lat: currentCenter.lat(), lng: currentCenter.lng() }
-      : LOCATION_COORDS[prevId] || targetLoc;
+      : targetLoc;
+    const currentZoom = map.getZoom() ?? TARGET_ZOOM;
 
-    // Case 2: Local campus move (< 15 km — Champaign ↔ Urbana)
-    const prevLoc = LOCATION_COORDS[prevId];
-    const distanceKm = prevLoc ? getDistanceKm(prevLoc, targetLoc) : 99999;
+    // Physical distance from wherever the camera currently is to the new target
+    const distanceKm = getDistanceKm(fromCoord, targetLoc);
 
-    if (distanceKm < 15) {
-      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 900);
+    // California stops stay at one altitude: pan between cities without any
+    // zoom change. Interstate arrivals and departures still use the flight arc.
+    const isCaliforniaToCalifornia =
+      CALIFORNIA_EXPERIENCE_IDS.has(prevId) &&
+      CALIFORNIA_EXPERIENCE_IDS.has(activeExpId);
+
+    if (isCaliforniaToCalifornia) {
+      cancelPanRef.current = animateCamera(map, {
+        fromCenter: fromCoord,
+        toCenter: targetLoc,
+        fromZoom: currentZoom,
+        toZoom: currentZoom,
+        durationMs: 650
+      });
+      return;
+    }
+
+    // Case 2: Local campus move (< 20 km — Champaign ↔ Urbana)
+    if (distanceKm < 20) {
+      cancelPanRef.current = animateCamera(map, {
+        fromCenter: fromCoord,
+        toCenter: targetLoc,
+        fromZoom: currentZoom,
+        toZoom: TARGET_ZOOM,
+        durationMs: 500
+      });
       return;
     }
 
     // Case 3: Regional move (< 180 km — California Bay Area)
     if (distanceKm < 180) {
-      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 1600);
+      cancelPanRef.current = animateCamera(map, {
+        fromCenter: fromCoord,
+        toCenter: targetLoc,
+        fromZoom: currentZoom,
+        toZoom: TARGET_ZOOM,
+        durationMs: 750,
+        flightZoom: Math.min(currentZoom, 8.5)
+      });
       return;
     }
 
-    // Case 4: Cross-country (> 180 km — Illinois ↔ California ↔ Maryland)
-    // Low-churn: 1 zoom out to continental view, 1 smooth GPU pan, 1 zoom in to target city
-    map.setZoom(5);
-    const t1 = setTimeout(() => {
-      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 2200, () => {
-        const t2 = setTimeout(() => map.setZoom(TARGET_ZOOM), 150);
-        timeoutsRef.current.push(t2);
-      });
-    }, 250);
-
-    timeoutsRef.current.push(t1);
-    return;
+    // Case 4: Long distance (> 180 km — Illinois ↔ California ↔ Maryland)
+    cancelPanRef.current = animateCamera(map, {
+      fromCenter: fromCoord,
+      toCenter: targetLoc,
+      fromZoom: currentZoom,
+      toZoom: TARGET_ZOOM,
+      durationMs: 3000,
+      flightZoom: FLIGHT_ZOOM
+    });
 
   }, [activeExpId, mapsLoaded]);
 

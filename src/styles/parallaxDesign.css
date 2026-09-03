@@ -73,6 +73,7 @@
 .glitch-typo:before {
   color: #3AC5A3;
 }
+
 .glitch-typo:after {
   color: #38bdf8;
 }
@@ -80,6 +81,7 @@
 .glitch-typo-second:before {
   color: #00f0ff;
 }
+
 .glitch-typo-second:after {
   color: #a855f7;
 }
@@ -108,19 +110,54 @@
 }
 
 @keyframes glitch-anim {
-  0% { transform: translate(0); opacity: 0; }
-  15% { transform: translate(-3px, 2px); opacity: 0.8; }
-  30% { transform: translate(4px, -2px); opacity: 0.5; }
-  45% { transform: translate(-2px, -3px); opacity: 0.7; }
-  60% { transform: translate(3px, 1px); opacity: 0.9; }
-  75% { transform: translate(-1px, 2px); opacity: 0.4; }
-  100% { transform: translate(0); opacity: 0; }
+  0% {
+    transform: translate(0);
+    opacity: 0;
+  }
+
+  15% {
+    transform: translate(-3px, 2px);
+    opacity: 0.8;
+  }
+
+  30% {
+    transform: translate(4px, -2px);
+    opacity: 0.5;
+  }
+
+  45% {
+    transform: translate(-2px, -3px);
+    opacity: 0.7;
+  }
+
+  60% {
+    transform: translate(3px, 1px);
+    opacity: 0.9;
+  }
+
+  75% {
+    transform: translate(-1px, 2px);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: translate(0);
+    opacity: 0;
+  }
 }
 
 @keyframes glitch-scale {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1.04); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1.04);
+  }
 }
 
 /* ─── Parallax Header & Sky ─────────────────────────────────────────────── */
@@ -226,9 +263,21 @@
 }
 
 @keyframes star-twinkle {
-  0% { opacity: 0.2; transform: scale(0.8) rotate(45deg); }
-  50% { opacity: 0.9; transform: scale(1.3) rotate(45deg); box-shadow: 0 0 8px #3AC5A3; }
-  100% { opacity: 0.3; transform: scale(0.9) rotate(45deg); }
+  0% {
+    opacity: 0.2;
+    transform: scale(0.8) rotate(45deg);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.3) rotate(45deg);
+    box-shadow: 0 0 8px #3AC5A3;
+  }
+
+  100% {
+    opacity: 0.3;
+    transform: scale(0.9) rotate(45deg);
+  }
 }
 
 /* Shooting Stars */
@@ -251,16 +300,42 @@
 }
 
 @keyframes star-tail {
-  0%, 10% { width: 0; }
-  20% { width: 120px; }
-  100% { width: 0; }
+
+  0%,
+  10% {
+    width: 0;
+  }
+
+  20% {
+    width: 120px;
+  }
+
+  100% {
+    width: 0;
+  }
 }
 
 @keyframes star-shooting {
-  0%, 10% { transform: translateX(0); opacity: 0; }
-  12% { opacity: 1; }
-  22% { transform: translateX(450px); opacity: 0; }
-  100% { transform: translateX(450px); opacity: 0; }
+
+  0%,
+  10% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  22% {
+    transform: translateX(450px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(450px);
+    opacity: 0;
+  }
 }
 
 /* ─── Isometric Architectural Buildings (Parallax Layers) ──────────────── */
@@ -349,13 +424,11 @@
 .about-bottom-blurry-transition .color-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(2, 7, 22, 0.4) 40%,
-    rgba(2, 7, 22, 0.85) 75%,
-    #020716 100%
-  );
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(2, 7, 22, 0.4) 40%,
+      rgba(2, 7, 22, 0.85) 75%,
+      #020716 100%);
 }
 
 /* ─── Blurry Gradient Transition: Top of Map / Experience Section ─── */
@@ -375,33 +448,27 @@
   inset: -4px 0 0 0;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  mask-image: linear-gradient(
-    to bottom,
-    black 0%,
-    rgba(0, 0, 0, 0.8) 35px,
-    rgba(0, 0, 0, 0.25) 70px,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    black 0%,
-    rgba(0, 0, 0, 0.8) 35px,
-    rgba(0, 0, 0, 0.25) 70px,
-    transparent 100%
-  );
+  mask-image: linear-gradient(to bottom,
+      black 0%,
+      rgba(0, 0, 0, 0.8) 35px,
+      rgba(0, 0, 0, 0.25) 70px,
+      transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom,
+      black 0%,
+      rgba(0, 0, 0, 0.8) 35px,
+      rgba(0, 0, 0, 0.25) 70px,
+      transparent 100%);
 }
 
 .about-map-blurry-transition .color-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    #020716 0%,
-    rgba(2, 7, 22, 0.95) 30px,
-    rgba(2, 7, 22, 0.6) 65px,
-    rgba(2, 7, 22, 0.15) 90px,
-    transparent 100%
-  );
+  background: linear-gradient(180deg,
+      #020716 0%,
+      rgba(2, 7, 22, 0.95) 30px,
+      rgba(2, 7, 22, 0.6) 65px,
+      rgba(2, 7, 22, 0.15) 90px,
+      transparent 100%);
 }
 
 .section-coder article {
@@ -523,6 +590,7 @@
     filter: brightness(2);
     color: #00f0ff;
   }
+
   100% {
     transform: scale(1);
     filter: brightness(1);
@@ -530,8 +598,15 @@
 }
 
 @keyframes cyberCursorFlicker {
-  0% { opacity: 0.15; transform: scaleY(0.85); }
-  100% { opacity: 1; transform: scaleY(1); }
+  0% {
+    opacity: 0.15;
+    transform: scaleY(0.85);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 .article-number {
@@ -876,7 +951,76 @@
   width: 100%;
 }
 
+.timeline-center-navigation {
+  position: absolute;
+  left: 50%;
+  bottom: 20vh;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 350ms ease, visibility 350ms ease;
+}
+
+.timeline-center-navigation.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.timeline-center-nav-button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #00f0ff;
+  background: rgba(2, 7, 22, 0.82);
+  border: 1px solid rgba(0, 240, 255, 0.65);
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 180ms ease, color 180ms ease, background 180ms ease,
+    border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+
+.timeline-center-nav-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.timeline-center-nav-button:hover:not(:disabled),
+.timeline-center-nav-button:focus-visible {
+  color: #ffffff;
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.65), 0 0 30px rgba(58, 197, 163, 0.25);
+  transform: scale(1.08);
+  outline: none;
+}
+
+.timeline-center-nav-button:disabled {
+  opacity: 0.25;
+  cursor: default;
+  box-shadow: none;
+}
+
 @media screen and (max-width: 860px) {
+  .timeline-center-navigation {
+    left: 20px;
+  }
+
   .timeline-central-spine {
     left: 20px !important;
     transform: none !important;
@@ -926,36 +1070,45 @@
     width: 100%;
     margin-bottom: 40px;
   }
+
   .article-content-col {
     margin-left: 0;
     width: 100%;
   }
+
   .section-flex-container {
     flex-direction: column !important;
     gap: 32px !important;
   }
+
   .section-flex-reverse {
     flex-direction: column !important;
   }
+
   .section-flex-reverse .section-sticky-header {
     text-align: left !important;
   }
+
   .section-flex-reverse .section-sticky-header .article-number {
     left: 0 !important;
     right: auto !important;
   }
+
   .section-sticky-header {
     position: relative !important;
     top: 0 !important;
     flex: none !important;
     width: 100% !important;
   }
+
   .works-row {
     grid-template-columns: 1fr;
   }
+
   .work-item-card.full-width {
     grid-column: span 1;
   }
+
   .header-placeholder {
     height: 140vh;
   }
@@ -965,11 +1118,13 @@
   .section-coder article {
     padding: 70px 0;
   }
+
   .exp-title-text {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
+
   .exp-header-row {
     flex-direction: column;
     align-items: flex-start;

@@ -379,9 +379,42 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
   const runwayRef = useRef(null);
   const stickyRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [idleExperienceIndex, setIdleExperienceIndex] = useState(null);
   const isTransitioningRef = useRef(false);
 
   const totalSteps = experiences.length;
+
+  // Reveal the next-step hint only after navigation has been idle for 2 seconds.
+  useEffect(() => {
+    let timer;
+    const viewport = stickyRef.current;
+    const resetIdle = () => {
+      clearTimeout(timer);
+      setIdleExperienceIndex(null);
+      timer = setTimeout(() => {
+        const rect = runwayRef.current?.getBoundingClientRect();
+        const midpoint = window.innerHeight / 2;
+        if (!document.hidden && rect && rect.top <= midpoint && rect.bottom > midpoint) {
+          setIdleExperienceIndex(activeIndex);
+        }
+      }, 2000);
+    };
+
+    window.addEventListener('scroll', resetIdle, { passive: true });
+    document.addEventListener('visibilitychange', resetIdle);
+    const activityEvents = ['wheel', 'touchmove'];
+    activityEvents.forEach((event) => viewport?.addEventListener(event, resetIdle, { passive: true }));
+    resetIdle();
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', resetIdle);
+      document.removeEventListener('visibilitychange', resetIdle);
+      activityEvents.forEach((event) => viewport?.removeEventListener(event, resetIdle));
+    };
+  }, [activeIndex]);
+
+  const showNextArrow = idleExperienceIndex === activeIndex;
 
   // Window scroll handler: maps vertical position inside runway to exact experience step
   useEffect(() => {
@@ -490,6 +523,15 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
   };
 
   const activeExp = experiences[activeIndex] || experiences[0];
+  const [debouncedExpId, setDebouncedExpId] = useState(activeExp.id);
+
+  // Debounce the map camera flight slightly so fast scrolling doesn't spam intermediate coordinates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedExpId(activeExp.id);
+    }, 75);
+    return () => clearTimeout(timer);
+  }, [activeExp.id]);
 
   return (
     <div
@@ -517,7 +559,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
       >
         {/* ── Full-Bleed Google Maps Background ── */}
         <TimelineGoogleMap
-          activeExpId={activeExp.id}
+          activeExpId={debouncedExpId}
           onSelectExperience={onSelectExperience}
         />
 
@@ -640,6 +682,25 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
               onSelect={onSelectExperience}
             />
           ))}
+        </div>
+
+        {/* ── Next control near the bottom of the timeline spine ── */}
+        <div
+          className={`timeline-center-navigation${showNextArrow ? ' is-visible' : ''}`}
+          aria-hidden={!showNextArrow}
+        >
+          <button
+            type="button"
+            className="timeline-center-nav-button"
+            onClick={() => jumpToStep(activeIndex + 1)}
+            disabled={!showNextArrow || activeIndex === totalSteps - 1}
+            aria-label="Next experience"
+            title="Next experience"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+            </svg>
+          </button>
         </div>
 
         {/* ── Vertical Milestone Bullets (Right side indicator) ── */}
