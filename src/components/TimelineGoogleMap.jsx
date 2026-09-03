@@ -42,8 +42,13 @@ const TIMELINE_MAP_BRIGHT_STYLE = [
       { weight: 3.0 }
     ]
   },
+  // Optimization: Turn off unnecessary POI, transit, man-made and parcel layers to reduce data payload and maximize speed
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'landscape.man_made', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative.neighborhood', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road.local', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   // Road networks
   {
     featureType: 'road',
@@ -151,7 +156,7 @@ const loadGoogleMapsScript = (apiKey) => {
       return;
     }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.google.maps);
@@ -186,16 +191,18 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     };
   }, []);
 
-  // Initialize Map — start directly on the first experience location
+  // Initialize Map with Vector Rendering & WebGL for ultra-crisp resolution
   useEffect(() => {
     if (!mapsLoaded || !containerRef.current || mapInstanceRef.current || !window.google?.maps) return;
 
     const google = window.google;
 
-    // Always start at US overview — the cinematic zoom-in plays when first entering the section
+    // Vector map rendering: WebGL GPU acceleration for 60fps pan and crisp lines
     const map = new google.maps.Map(containerRef.current, {
       center: US_CENTER,
       zoom: US_ZOOM,
+      mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID',
+      renderingType: 'VECTOR',
       isFractionalZoomEnabled: true,
       disableDefaultUI: true,
       gestureHandling: 'none',
@@ -211,10 +218,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     };
   }, [mapsLoaded, onSelectExperience]);
 
-  // Camera Flight Transitions — PHASED to avoid simultaneous tile reloads:
-  //   Phase 1: Zoom OUT (instant setZoom, Google applies CSS transform — no tile reload)
-  //   Phase 2: Pan (smooth 60fps coordinate animation at the wide zoom)
-  //   Phase 3: Zoom IN (instant setZoom after pan reaches destination — one tile load at a fixed location)
+  // Fast, Low-Churn Camera Flight Transitions
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !window.google?.maps) return;
@@ -232,28 +236,20 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
 
     // Case 1: Scrolled back above Experience section → pull back to US overview
     if (!activeExpId) {
-      map.setZoom(7);
-      const t1 = setTimeout(() => {
-        map.setZoom(US_ZOOM);
-        map.panTo(US_CENTER);
-      }, 200);
-      timeoutsRef.current.push(t1);
+      map.setZoom(US_ZOOM);
+      map.panTo(US_CENTER);
       return;
     }
 
     const targetLoc = LOCATION_COORDS[activeExpId];
     if (!targetLoc) return;
 
-    // Initial entry into Experiences section — cinematic zoom in from US view to Illinois
+    // Initial entry into Experiences section: clean, direct flight into Illinois
     if (!prevId) {
-      // Smooth pan from US center directly to Champaign, IL while still wide
       cancelPanRef.current = smoothPan(map, US_CENTER, targetLoc, 1000);
-      // Then step zoom in as the pan converges on Illinois
-      const ti2 = setTimeout(() => map.setZoom(6), 800);
-      const ti3 = setTimeout(() => map.setZoom(8), 1400);
-      const ti4 = setTimeout(() => map.setZoom(10), 2000);
-      const ti5 = setTimeout(() => map.setZoom(TARGET_ZOOM), 2600);
-      timeoutsRef.current.push(ti2, ti3, ti4, ti5);
+      const ti1 = setTimeout(() => map.setZoom(8), 500);
+      const ti2 = setTimeout(() => map.setZoom(TARGET_ZOOM), 1100);
+      timeoutsRef.current.push(ti1, ti2);
       return;
     }
 
@@ -264,44 +260,31 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
       : LOCATION_COORDS[prevId] || targetLoc;
 
     // Case 2: Local campus move (< 15 km — Champaign ↔ Urbana)
-    // Stay at city zoom, smooth pan only — no zoom change needed
     const prevLoc = LOCATION_COORDS[prevId];
     const distanceKm = prevLoc ? getDistanceKm(prevLoc, targetLoc) : 99999;
 
     if (distanceKm < 15) {
-      // Pure smooth pan at city zoom — zero tile reload
-      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 1100);
+      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 900);
       return;
     }
 
     // Case 3: Regional move (< 180 km — California Bay Area)
-    // NO zoom changes — just a clean, smooth pan at city zoom level (11)
-    // This avoids any tile reload stutter between California cities
     if (distanceKm < 180) {
-      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 2000);
+      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 1600);
       return;
     }
 
     // Case 4: Cross-country (> 180 km — Illinois ↔ California ↔ Maryland)
-    // Phase 1: Slow stepped zoom out 11 → 9 → 7 → 5 (300ms per step, lets tiles load gracefully)
-    // Phase 2: Pan 3.2s at zoom 5 (wide continental view, smooth)
-    // Phase 3: Slow stepped zoom in 5 → 7 → 9 → 11 AFTER pan arrives at destination
-    map.setZoom(9);                                      // step 1: 0ms
-    const tz2 = setTimeout(() => map.setZoom(7), 300);  // step 2: 300ms
-    const tz3 = setTimeout(() => map.setZoom(5), 600);  // step 3: 600ms — now at continental view
-
-    // Pan starts after zoom-out completes (900ms)
+    // Low-churn: 1 zoom out to continental view, 1 smooth GPU pan, 1 zoom in to target city
+    map.setZoom(5);
     const t1 = setTimeout(() => {
-      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 3200, () => {
-        // Phase 3 — slow stepped zoom in AFTER pan arrives at destination
-        const t2 = setTimeout(() => map.setZoom(7), 250);
-        const t3 = setTimeout(() => map.setZoom(9), 750);
-        const t4 = setTimeout(() => map.setZoom(TARGET_ZOOM), 1350);
-        timeoutsRef.current.push(t2, t3, t4);
+      cancelPanRef.current = smoothPan(map, fromCoord, targetLoc, 2200, () => {
+        const t2 = setTimeout(() => map.setZoom(TARGET_ZOOM), 150);
+        timeoutsRef.current.push(t2);
       });
-    }, 900);
+    }, 250);
 
-    timeoutsRef.current.push(tz2, tz3, t1);
+    timeoutsRef.current.push(t1);
     return;
 
   }, [activeExpId, mapsLoaded]);
