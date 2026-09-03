@@ -1061,7 +1061,7 @@ button {
 }
 
 .detail-modal-backdrop {
-  animation: detailBackdropIn 300ms ease both;
+  animation: detailBackdropIn 200ms ease both;
 }
 
 .detail-modal-panel {
@@ -1069,7 +1069,7 @@ button {
 }
 
 .detail-modal-backdrop.is-closing {
-  animation: detailBackdropOut 450ms ease both;
+  animation: detailBackdropOut 350ms ease both;
 }
 
 .detail-modal-backdrop.is-closing .detail-modal-panel {

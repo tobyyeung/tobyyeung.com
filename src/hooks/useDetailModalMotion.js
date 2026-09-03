@@ -24,7 +24,7 @@ export const useDetailModalMotion = (item, onClose, sourceElement) => {
       animationRef.current = panel.animate([
       { transform: sourceTransform(target, sourceRectRef.current), opacity: 0.7, borderRadius: '18px' },
       { transform: 'none', opacity: 1, borderRadius: getComputedStyle(panel).borderRadius }
-      ], { duration: 650, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'backwards' });
+      ], { duration: 280, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'backwards' });
     }
     return () => {
       animationRef.current?.cancel();
@@ -49,13 +49,13 @@ export const useDetailModalMotion = (item, onClose, sourceElement) => {
       animationRef.current = panel.animate([
         { transform: currentTransform, opacity: currentOpacity },
         { transform: sourceTransform(panel.getBoundingClientRect(), destination), opacity: 0, borderRadius: '18px' }
-      ], { duration: 450, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+      ], { duration: 350, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
     }
     timer.current = setTimeout(() => {
       timer.current = null;
       setClosingItem(null);
       onClose();
-    }, reducedMotion ? 0 : 450);
+    }, reducedMotion ? 0 : 350);
   }, [item, onClose, sourceElement]);
 
   useEffect(() => {
