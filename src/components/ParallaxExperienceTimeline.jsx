@@ -382,6 +382,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [idleExperienceIndex, setIdleExperienceIndex] = useState(null);
   const isTransitioningRef = useRef(false);
+  const shortcutNavigationRef = useRef(false);
   const flightBusyRef = useRef(false);
   const lockPositionRef = useRef(null);
   const unlockTimerRef = useRef(null);
@@ -410,6 +411,14 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
   }, [releaseLock]);
 
   useEffect(() => {
+    const cancelNavigationLock = () => {
+      shortcutNavigationRef.current = true;
+      clearTimeout(unlockTimerRef.current);
+      isTransitioningRef.current = false;
+      lockPositionRef.current = null;
+      minimumLockUntilRef.current = 0;
+    };
+    const finishShortcutNavigation = () => { shortcutNavigationRef.current = false; };
     const blockScroll = (event) => {
       if (!isTransitioningRef.current || event.ctrlKey || event.metaKey) return;
       if (event.type === 'keydown') {
@@ -421,11 +430,15 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     window.addEventListener('wheel', blockScroll, { passive: false });
     window.addEventListener('touchmove', blockScroll, { passive: false });
     window.addEventListener('keydown', blockScroll);
+    window.addEventListener('portfolio:section-navigation', cancelNavigationLock);
+    window.addEventListener('portfolio:section-navigation-end', finishShortcutNavigation);
     return () => {
       clearTimeout(unlockTimerRef.current);
       window.removeEventListener('wheel', blockScroll);
       window.removeEventListener('touchmove', blockScroll);
       window.removeEventListener('keydown', blockScroll);
+      window.removeEventListener('portfolio:section-navigation', cancelNavigationLock);
+      window.removeEventListener('portfolio:section-navigation-end', finishShortcutNavigation);
     };
   }, []);
 
@@ -468,6 +481,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     let ticking = false;
 
     const handleScroll = () => {
+      if (shortcutNavigationRef.current) return;
       if (isTransitioningRef.current && lockPositionRef.current !== null) {
         if (Math.abs(window.scrollY - lockPositionRef.current) > 1) {
           window.scrollTo({ top: lockPositionRef.current, behavior: 'instant' });
@@ -478,7 +492,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
       ticking = true;
 
       requestAnimationFrame(() => {
-        if (!runwayRef.current || isTransitioningRef.current) {
+        if (!runwayRef.current || isTransitioningRef.current || shortcutNavigationRef.current) {
           ticking = false;
           return;
         }
@@ -518,6 +532,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     if (!el) return;
 
     const onWheel = (e) => {
+      if (shortcutNavigationRef.current) return;
       if (!runwayRef.current) return;
       const rect = runwayRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight || 800;

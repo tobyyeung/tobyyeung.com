@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useBreakpoints } from '../hooks/useBreakpoints';
+import { scrollToSectionPosition } from '../utils/sectionNavigation';
 
 const NAV_SECTIONS = [
   { id: 'hero', label: 'Home', desc: 'Skyline & Overview' },
@@ -99,16 +100,14 @@ const Header = () => {
   const scrollToSection = (id) => {
     setIsMenuOpen(false);
     setActiveSection(id);
+    // Explicit navigation takes priority over the experience animation lock.
 
     if (id === 'hero') {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      scrollToSectionPosition(0);
       return;
     }
 
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       const element = document.getElementById(id);
       if (element) {
         const header = document.querySelector('header');
@@ -122,14 +121,11 @@ const Header = () => {
         const offsetPosition = elementPosition + window.pageYOffset -
           (id === 'experience' ? 0 : headerHeight + 12);
 
-        window.scrollTo({
-          top: Math.max(0, offsetPosition),
-          behavior: 'smooth'
-        });
+        scrollToSectionPosition(Math.max(0, offsetPosition));
       } else if (location.pathname !== '/') {
         window.location.href = '/#/';
       }
-    }, 40);
+    });
   };
 
   return (
