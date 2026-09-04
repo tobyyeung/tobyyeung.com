@@ -1088,6 +1088,30 @@ button {
   outline-offset: 4px;
 }
 
+.project-overview {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0 0 1.25rem;
+}
+
+.project-highlights {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+
+.project-highlights li + li {
+  margin-top: 0.85rem;
+}
+
+.project-highlights li::marker {
+  color: var(--accent-primary);
+}
+
 .detail-modal-backdrop {
   animation: detailBackdropIn 200ms ease both;
 }

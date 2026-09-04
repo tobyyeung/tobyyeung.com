@@ -7,11 +7,8 @@ import ParallaxProjectsShowcase from '../components/ParallaxProjectsShowcase';
 import CyberDecryptHeading from '../components/CyberDecryptHeading';
 import CyberDecryptText from '../components/CyberDecryptText';
 import { uiucCourses, ucsdCourses } from '../data/education';
-import { skillsData } from '../data/skills';
+import SkillsSection from '../components/SkillsSection';
 import { siteLinks } from '../data/siteLinks';
-
-// Keep the original assets intact; only brighten dark monochrome skill logos.
-const darkSkillLogos = new Set(['Markdown', 'Ollama']);
 
 const ConfiguredLink = ({ href, children, ...props }) => href ? (
   <a {...props} className="configured-site-link" href={href} target="_blank" rel="noopener noreferrer">
@@ -23,7 +20,6 @@ const Home = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedExperience, setSelectedExperience] = useState(null);
   const [detailSource, setDetailSource] = useState(null);
-  const [activeSkillCategory, setActiveSkillCategory] = useState("Languages");
   const [showAllUiucCourses, setShowAllUiucCourses] = useState(false);
 
   // Parallax scroll & mouse tracking
@@ -391,95 +387,7 @@ const Home = () => {
         </article>
 
         {/* ─── Section 05: Skills ─── */}
-        <article id="skills">
-          <div className="parallax-container">
-            <div className="article-heading-col">
-              <span className="article-number">05</span>
-              <h1 className="article-heading">
-                SKILLS <strong>&amp;</strong><br />
-                STACK
-              </h1>
-            </div>
-
-            <div className="article-content-col">
-              {/* Skills Category Tabs */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
-                {Object.keys(skillsData).map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveSkillCategory(cat)}
-                    style={{
-                      fontFamily: "'Oswald', sans-serif",
-                      fontSize: '0.95rem',
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                      padding: '8px 18px',
-                      borderRadius: '8px',
-                      border: activeSkillCategory === cat ? '1px solid #3AC5A3' : '1px solid rgba(255, 255, 255, 0.15)',
-                      background: activeSkillCategory === cat ? '#3AC5A3' : 'rgba(10, 19, 37, 0.6)',
-                      color: activeSkillCategory === cat ? '#020716' : '#ffffff',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Skills Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '14px' }}>
-                {skillsData[activeSkillCategory].map((skill) => (
-                  <ConfiguredLink
-                    key={skill}
-                    href={siteLinks.skills[skill]}
-                    title={siteLinks.skills[skill] ? `Learn about ${skill} (opens in a new tab)` : undefined}
-                    style={{
-                      background: 'rgba(10, 19, 37, 0.6)',
-                      border: '1px solid rgba(58, 197, 163, 0.15)',
-                      borderRadius: '10px',
-                      padding: '16px 12px',
-                      textAlign: 'center',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '10px',
-                      transition: 'transform 0.2s, border-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-3px)';
-                      e.currentTarget.style.borderColor = '#3AC5A3';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'none';
-                      e.currentTarget.style.borderColor = 'rgba(58, 197, 163, 0.15)';
-                    }}
-                  >
-                    <img
-                      src={`${import.meta.env.BASE_URL}images/skills/${skill.replace(/[\/\\]/g, '_').toLowerCase()}.png`}
-                      alt={skill}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        objectFit: 'contain',
-                        filter: darkSkillLogos.has(skill) ? 'brightness(0) invert(1)' : undefined
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                    <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#ffffff' }}>
-                      {skill}
-                    </span>
-                  </ConfiguredLink>
-                ))}
-              </div>
-            </div>
-            <div style={{ clear: 'both' }} />
-          </div>
-        </article>
+        <SkillsSection />
 
         {/* ─── Section 06: Follow Me / Contact ─── */}
         <article id="contact">

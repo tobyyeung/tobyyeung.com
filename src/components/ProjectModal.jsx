@@ -51,7 +51,7 @@ const ProjectModal = ({ project, onClose, sourceElement }) => {
           boxShadow: 'var(--shadow-lg)',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflowX: 'hidden'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -129,16 +129,18 @@ const ProjectModal = ({ project, onClose, sourceElement }) => {
           <div style={{ flex: '1 1 50%', padding: '2.5rem', display: 'flex', flexDirection: 'column' }}>
 
 
-            <div 
-              className="modal-description"
-              style={{ 
-                color: 'var(--text-primary)', 
-                fontSize: '1.1rem', 
-                lineHeight: '1.8',
-                marginBottom: '2.5rem'
-              }}
-              dangerouslySetInnerHTML={{ __html: project.description }}
-            />
+            <div className="modal-description">
+              <p className="project-overview">{project.description}</p>
+              {project.highlights?.length > 0 && (
+                <ul className="project-highlights">
+                  {project.highlights.map(highlight => (
+                    <li key={highlight.keywords}>
+                      <strong>{highlight.keywords}:</strong> {highlight.text}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           {/* Image Section (Right side) */}
