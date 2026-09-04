@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { experiences } from '../data/experiences';
 import TimelineGoogleMap, { LOCATION_COORDS } from './TimelineGoogleMap';
 
@@ -382,6 +382,52 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [idleExperienceIndex, setIdleExperienceIndex] = useState(null);
   const isTransitioningRef = useRef(false);
+  const flightBusyRef = useRef(false);
+  const lockPositionRef = useRef(null);
+  const unlockTimerRef = useRef(null);
+  const minimumLockUntilRef = useRef(0);
+  const releaseLock = useCallback(() => {
+    clearTimeout(unlockTimerRef.current);
+    if (flightBusyRef.current) return;
+    const remaining = minimumLockUntilRef.current - performance.now();
+    if (remaining > 0) {
+      unlockTimerRef.current = setTimeout(releaseLock, remaining);
+      return;
+    }
+    isTransitioningRef.current = false;
+    lockPositionRef.current = null;
+  }, []);
+  const beginLock = useCallback((position) => {
+    isTransitioningRef.current = true;
+    lockPositionRef.current = position;
+    minimumLockUntilRef.current = performance.now() + 1100;
+    clearTimeout(unlockTimerRef.current);
+    unlockTimerRef.current = setTimeout(releaseLock, 1100);
+  }, [releaseLock]);
+  const onFlightChange = useCallback((busy) => {
+    flightBusyRef.current = busy;
+    if (!busy) releaseLock();
+  }, [releaseLock]);
+
+  useEffect(() => {
+    const blockScroll = (event) => {
+      if (!isTransitioningRef.current || event.ctrlKey || event.metaKey) return;
+      if (event.type === 'keydown') {
+        if (event.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+        if (!['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(event.key)) return;
+      }
+      event.preventDefault();
+    };
+    window.addEventListener('wheel', blockScroll, { passive: false });
+    window.addEventListener('touchmove', blockScroll, { passive: false });
+    window.addEventListener('keydown', blockScroll);
+    return () => {
+      clearTimeout(unlockTimerRef.current);
+      window.removeEventListener('wheel', blockScroll);
+      window.removeEventListener('touchmove', blockScroll);
+      window.removeEventListener('keydown', blockScroll);
+    };
+  }, []);
 
   const totalSteps = experiences.length;
 
@@ -422,11 +468,17 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     let ticking = false;
 
     const handleScroll = () => {
+      if (isTransitioningRef.current && lockPositionRef.current !== null) {
+        if (Math.abs(window.scrollY - lockPositionRef.current) > 1) {
+          window.scrollTo({ top: lockPositionRef.current, behavior: 'instant' });
+        }
+        return;
+      }
       if (!runwayRef.current || ticking) return;
       ticking = true;
 
       requestAnimationFrame(() => {
-        if (!runwayRef.current) {
+        if (!runwayRef.current || isTransitioningRef.current) {
           ticking = false;
           return;
         }
@@ -444,7 +496,10 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
         const progress = Math.max(0, Math.min(1, scrolled / totalDistance));
 
         // Exact index calculation: advances 1 experience per scroll step
-        const calculatedIndex = Math.min(totalSteps - 1, Math.floor(progress * totalSteps));
+        const calculatedIndex = Math.min(totalSteps - 1, Math.round(progress * (totalSteps - 1)));
+        if (calculatedIndex !== activeIndex && rect.top <= 5 && rect.bottom >= viewportHeight - 5) {
+          beginLock(window.scrollY);
+        }
         setActiveIndex(calculatedIndex);
 
         ticking = false;
@@ -455,7 +510,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [totalSteps]);
+  }, [totalSteps, activeIndex, beginLock]);
 
   // Wheel event interceptor: snaps exactly ONE experience per wheel flick
   useEffect(() => {
@@ -490,8 +545,9 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
           isTransitioningRef.current = true;
           const nextIndex = activeIndex + 1;
           const targetY = window.pageYOffset + rect.top + (nextIndex * stepDistance);
-          window.scrollTo({ top: targetY, behavior: 'smooth' });
-          setTimeout(() => { isTransitioningRef.current = false; }, 1050);
+          beginLock(targetY);
+          setActiveIndex(nextIndex);
+          window.scrollTo({ top: targetY, behavior: 'instant' });
         }
         // If already at last experience, let the page naturally scroll down to Projects!
       } else if (delta < 0) {
@@ -501,8 +557,9 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
           isTransitioningRef.current = true;
           const prevIndex = activeIndex - 1;
           const targetY = window.pageYOffset + rect.top + (prevIndex * stepDistance);
-          window.scrollTo({ top: targetY, behavior: 'smooth' });
-          setTimeout(() => { isTransitioningRef.current = false; }, 1050);
+          beginLock(targetY);
+          setActiveIndex(prevIndex);
+          window.scrollTo({ top: targetY, behavior: 'instant' });
         }
         // If already at first experience, let the page naturally scroll up to About!
       }
@@ -510,17 +567,19 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
 
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [activeIndex, totalSteps]);
+  }, [activeIndex, totalSteps, beginLock]);
 
   // Jump to specific experience step (buttons / bullets)
   const jumpToStep = (index) => {
-    if (!runwayRef.current) return;
+    if (!runwayRef.current || isTransitioningRef.current || index === activeIndex) return;
     const rect = runwayRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight || 800;
     const totalDistance = runwayRef.current.offsetHeight - viewportHeight;
     const stepDistance = totalDistance / (totalSteps - 1);
     const targetY = window.pageYOffset + rect.top + (index * stepDistance);
-    window.scrollTo({ top: targetY, behavior: 'smooth' });
+    beginLock(targetY);
+    setActiveIndex(index);
+    window.scrollTo({ top: targetY, behavior: 'instant' });
   };
 
   const activeExp = experiences[activeIndex] || experiences[0];
@@ -561,6 +620,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
         {/* ── Full-Bleed Google Maps Background ── */}
         <TimelineGoogleMap
           activeExpId={debouncedExpId}
+          onFlightChange={onFlightChange}
           onSelectExperience={onSelectExperience}
         />
 

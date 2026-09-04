@@ -147,7 +147,7 @@ const animateCamera = (
   const tick = (now) => {
     if (isCancelled) return;
     // Authentication failures can invalidate a map while a flight is running.
-    if (!(map.getDiv?.() instanceof Element)) return;
+    if (!(map.getDiv?.() instanceof Element)) { onDone?.(); return; }
     const elapsed = now - start;
     const progress = Math.min(1, elapsed / durationMs);
     const shouldPaint = elapsed - lastFrame >= CAMERA_FRAME_MS || progress === 1;
@@ -245,7 +245,7 @@ const loadGoogleMapsScript = (apiKey) => {
   return googleMapsPromise;
 };
 
-const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
+const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightChange }) => {
   const containerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const prevExpIdRef = useRef(null);
@@ -326,12 +326,16 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience }) => {
     const map = mapInstanceRef.current;
     if (!map || !window.google?.maps || !(map.getDiv?.() instanceof Element)) return;
 
-    const fly = (options) => animateCamera(map, options, () => {
+    const fly = (options) => {
+      onFlightChange?.(true);
+      return animateCamera(map, options, () => {
       const city = LOCATION_COORDS[activeExpId];
       if (city && window.innerWidth <= 1150) {
         map.setCenter(getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
       }
-    });
+      onFlightChange?.(false);
+      });
+    };
 
     if (cancelPanRef.current) {
       cancelPanRef.current();
