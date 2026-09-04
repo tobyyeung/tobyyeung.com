@@ -55,7 +55,7 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
       }}
       onClick={requestClose}
     >
-      {/* Modal Container - Translucent & Compact */}
+      {/* Modal Container - Solid & Compact */}
       <div
         className="detail-modal-panel"
         ref={panelRef}
@@ -63,7 +63,7 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
         aria-modal="true"
         aria-label={exp.title}
         style={{
-          background: 'color-mix(in srgb, var(--bg-primary, #0a1325) 74%, transparent)',
+          background: 'var(--bg-primary, #0a1325)',
           color: 'var(--text-primary, #ffffff)',
           borderRadius: '16px',
           border: '1px solid var(--border-glass, rgba(58, 197, 163, 0.25))',
@@ -225,7 +225,7 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
             )}
           </div>
 
-          {/* Right Column: Compact Horizontal Rectangular Image Carousel */}
+          {/* Right Column: Compact Square Image Carousel */}
           {hasImages && (
             <div style={{
               flex: isTablet ? '1' : '0.6',
@@ -239,13 +239,13 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
               borderTop: isTablet ? '1px solid var(--border-glass, rgba(255, 255, 255, 0.1))' : 'none',
               position: 'relative'
             }}>
-              {/* Compact Horizontal 16:9 Rectangular Image Container */}
+              {/* Square image container that scales down on narrow screens */}
               <div style={{
                 position: 'relative',
                 width: '100%',
                 maxWidth: '240px',
-                aspectRatio: '16 / 9',
-                maxHeight: '140px',
+                aspectRatio: '1 / 1',
+                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -259,6 +259,8 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
                   src={imagesList[currentImgIndex]}
                   alt={`${exp.title} showcase ${currentImgIndex + 1}`}
                   style={{
+                    position: 'absolute',
+                    inset: 0,
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',

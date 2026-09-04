@@ -6,6 +6,7 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
   const cardRef = useRef(null);
   const [mouseTilt, setMouseTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [isSquareImage, setIsSquareImage] = useState(true);
 
   const handleMouseMove = (e) => {
     if (!cardRef.current) return;
@@ -114,15 +115,20 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
             </span>
           </div>
 
-          {/* Screenshot with Hover Zoom */}
+          {/* Fit square logos completely; keep the wide screenshot treatment. */}
           <img
             src={project.imageUrl}
             alt={project.title}
+            onLoad={(event) => {
+              const { naturalWidth, naturalHeight } = event.currentTarget;
+              const ratio = naturalWidth / naturalHeight;
+              setIsSquareImage(ratio >= 0.95 && ratio <= 1.05);
+            }}
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
-              transform: `scale(${isHovered ? 1.06 : 1})`,
+              objectFit: isSquareImage ? 'contain' : 'cover',
+              transform: `scale(${isSquareImage ? (isHovered ? 0.98 : 0.92) : (isHovered ? 1.06 : 1)})`,
               transition: 'transform 0.4s ease, filter 0.3s ease',
               filter: isHovered ? 'brightness(1.05)' : 'brightness(0.92)'
             }}
@@ -133,7 +139,7 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(to top, rgba(7, 14, 28, 0.95) 0%, transparent 55%)',
+              background: isSquareImage ? 'none' : 'linear-gradient(to top, rgba(7, 14, 28, 0.95) 0%, transparent 55%)',
               pointerEvents: 'none'
             }}
           />

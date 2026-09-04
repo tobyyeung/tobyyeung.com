@@ -1,5 +1,25 @@
 export const initialProjects = [
   {
+    id: "3",
+    title: "Tacho Tasks",
+    shortDescription: "An Electron desktop application bidirectionally synchronizing Firebase Firestore and Google Calendar via OAuth 2.0 PKCE.",
+    description: "Tacho Tasks is an <strong>Electron</strong> desktop application built using <strong>JavaScript/TypeScript</strong>, separating UI renderers from background processes through <strong>IPC</strong>. I engineered bidirectional synchronization between <strong>Firebase Firestore</strong> and <strong>Google Calendar</strong> using <strong>OAuth 2.0 PKCE</strong> and <strong>REST APIs</strong>, including automatic token refresh and credential management. It integrates <strong>chrono-node</strong> to convert natural-language date expressions into structured task schedules for automated calendar management.",
+    technologies: ["Electron", "TypeScript", "JavaScript", "Firebase Firestore", "Google Calendar API", "OAuth 2.0 PKCE", "chrono-node", "IPC", "REST APIs"],
+    websiteUrl: "https://tasks.tobyyeung.com",
+    githubUrl: "https://github.com/tobyyeung/tachotasks",
+    imageUrl: import.meta.env.BASE_URL + "images/projects/tacho.png"
+  },
+  {
+    id: "5",
+    title: "Keating Framework (INVITE AI)",
+    shortDescription: "A privacy-first AI platform helping educators identify at-risk students.",
+    description: "Built at the INVITE AI Institute, Keating helps educators identify at-risk students while keeping data local. I developed a <strong>RAG</strong> pipeline using <strong>LangChain</strong>, <strong>DuckDB</strong>, and <strong>ChromaDB</strong>, with local LLM inference through <strong>Ollama</strong> and a <strong>FastAPI</strong> backend.",
+    technologies: ["FastAPI", "Python", "DuckDB", "ChromaDB", "Ollama", "LLMs", "RAG", "LangChain", "Pytest"],
+    websiteUrl: "https://invite.illinois.edu/",
+    githubUrl: "",
+    imageUrl: import.meta.env.BASE_URL + "images/projects/keating.png"
+  },
+  {
     id: "1",
     title: "Aleago",
     shortDescription: "A Next.js/Supabase platform deployed on Vercel with deterministic probability models and async PostgreSQL pipelines.",
@@ -20,14 +40,14 @@ export const initialProjects = [
     imageUrl: import.meta.env.BASE_URL + "images/projects/birthdayblitz.png"
   },
   {
-    id: "3",
-    title: "Tacho Tasks",
-    shortDescription: "An Electron desktop application bidirectionally synchronizing Firebase Firestore and Google Calendar via OAuth 2.0 PKCE.",
-    description: "Tacho Tasks is an <strong>Electron</strong> desktop application built using <strong>JavaScript/TypeScript</strong>, separating UI renderers from background processes through <strong>IPC</strong>. I engineered bidirectional synchronization between <strong>Firebase Firestore</strong> and <strong>Google Calendar</strong> using <strong>OAuth 2.0 PKCE</strong> and <strong>REST APIs</strong>, including automatic token refresh and credential management. It integrates <strong>chrono-node</strong> to convert natural-language date expressions into structured task schedules for automated calendar management.",
-    technologies: ["Electron", "TypeScript", "JavaScript", "Firebase Firestore", "Google Calendar API", "OAuth 2.0 PKCE", "chrono-node", "IPC", "REST APIs"],
-    websiteUrl: "https://tasks.tobyyeung.com",
-    githubUrl: "https://github.com/tobyyeung/tachotasks",
-    imageUrl: import.meta.env.BASE_URL + "images/projects/tacho.png"
+    id: "6",
+    title: "Cloud Calendar System (KesselWorks)",
+    shortDescription: "A scalable calendar system for project timeline tracking and contractor coordination.",
+    description: "Developed natively for internal enterprise teams at KesselWorks, this highly scalable, multi-tenant calendar system centralizes project timeline tracking, resource allocation, and contractor coordination. The application features a feature-rich, interactive <strong>React</strong> frontend seamlessly backed by a <strong>Node.js</strong> microservice architecture, executing highly optimized <strong>MySQL</strong> queries via streamlined <strong>REST APIs</strong>. To ensure zero-downtime deployments and massive horizontal scalability, I fully containerized the entire application stack using <strong>Docker</strong>, orchestrated it with <strong>Kubernetes</strong>, and configured an automated <strong>CI/CD</strong> pipeline. The entire infrastructure is securely deployed and load-balanced via <strong>Nginx</strong> across high-availability <strong>AWS EC2</strong> and <strong>AWS S3</strong> environments.",
+    technologies: ["React", "Node.js", "MySQL", "Docker", "Kubernetes", "AWS EC2", "AWS S3", "Nginx", "CI/CD"],
+    websiteUrl: "https://kledger.com/",
+    githubUrl: "",
+    imageUrl: import.meta.env.BASE_URL + "images/projects/kesselworks.png"
   },
   {
     id: "4",
@@ -38,26 +58,6 @@ export const initialProjects = [
     websiteUrl: "",
     githubUrl: "",
     imageUrl: import.meta.env.BASE_URL + "images/projects/vision.png"
-  },
-  {
-    id: "5",
-    title: "Keating Framework (INVITE AI)",
-    shortDescription: "An intelligent platform designed to proactively identify at-risk students using RAG and local ML inference.",
-    description: "The Keating Framework, developed at the INVITE AI Institute, is an intelligent, privacy-first platform designed to empower educators by proactively identifying and assisting at-risk students. I engineered the core intelligence utilizing <strong>LangChain</strong> to build a powerful, context-aware <strong>RAG (Retrieval-Augmented Generation)</strong> system. This system efficiently queries massive student datasets using highly-optimized <strong>DuckDB</strong> columnar storage and semantic search via <strong>ChromaDB</strong> vector databases. To ensure deep data privacy and low-latency performance without relying on external APIs, I engineered a complete local inference pipeline running quantized <strong>Local LLMs</strong> via <strong>Ollama</strong>, orchestrated by a blazing fast asynchronous <strong>FastAPI</strong> backend and rigorously tested with <strong>Pytest</strong>.",
-    technologies: ["FastAPI", "Python", "DuckDB", "ChromaDB", "Ollama", "LLMs", "RAG", "LangChain", "Pytest"],
-    websiteUrl: "https://invite.illinois.edu/",
-    githubUrl: "",
-    imageUrl: import.meta.env.BASE_URL + "images/projects/keating.png"
-  },
-  {
-    id: "6",
-    title: "Cloud Calendar System (KesselWorks)",
-    shortDescription: "A scalable calendar system for project timeline tracking and contractor coordination.",
-    description: "Developed natively for internal enterprise teams at KesselWorks, this highly scalable, multi-tenant calendar system centralizes project timeline tracking, resource allocation, and contractor coordination. The application features a feature-rich, interactive <strong>React</strong> frontend seamlessly backed by a <strong>Node.js</strong> microservice architecture, executing highly optimized <strong>MySQL</strong> queries via streamlined <strong>REST APIs</strong>. To ensure zero-downtime deployments and massive horizontal scalability, I fully containerized the entire application stack using <strong>Docker</strong>, orchestrated it with <strong>Kubernetes</strong>, and configured an automated <strong>CI/CD</strong> pipeline. The entire infrastructure is securely deployed and load-balanced via <strong>Nginx</strong> across high-availability <strong>AWS EC2</strong> and <strong>AWS S3</strong> environments.",
-    technologies: ["React", "Node.js", "MySQL", "Docker", "Kubernetes", "AWS EC2", "AWS S3", "Nginx", "CI/CD"],
-    websiteUrl: "https://kledger.com/",
-    githubUrl: "",
-    imageUrl: import.meta.env.BASE_URL + "images/projects/kesselworks.png"
   }
 ];
 

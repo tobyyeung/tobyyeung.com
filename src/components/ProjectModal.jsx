@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDetailModalMotion } from '../hooks/useDetailModalMotion';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const ProjectModal = ({ project, onClose, sourceElement }) => {
   const { isTablet } = useBreakpoints();
+  const [squareImageSrc, setSquareImageSrc] = useState(null);
 
   const { isClosing, requestClose, panelRef } = useDetailModalMotion(project, onClose, sourceElement);
 
   if (!project) return null;
+
+  const imageSrc = project.imageUrl || `https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800&sig=${project.id}`;
+  const isSquareImage = squareImageSrc === imageSrc;
 
   return createPortal(
     <div
@@ -36,7 +40,7 @@ const ProjectModal = ({ project, onClose, sourceElement }) => {
         aria-modal="true"
         aria-label={project.title}
         style={{
-          background: 'color-mix(in srgb, var(--bg-primary) 74%, transparent)',
+          background: 'var(--bg-primary, #0a1325)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-glass)',
           width: '100%',
@@ -140,9 +144,15 @@ const ProjectModal = ({ project, onClose, sourceElement }) => {
           {/* Image Section (Right side) */}
           <div style={{ flex: '1 1 50%', minHeight: isTablet ? '220px' : 'auto', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isTablet ? '2rem 2rem 0' : '2.5rem' }}>
             <img 
-              src={project.imageUrl || `https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800&sig=${project.id}`} 
+              key={imageSrc}
+              src={imageSrc}
               alt={project.title} 
-              style={{ maxWidth: '100%', maxHeight: isTablet ? '300px' : '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)' }}
+              onLoad={(event) => {
+                const { naturalWidth, naturalHeight } = event.currentTarget;
+                const ratio = naturalWidth / naturalHeight;
+                setSquareImageSrc(ratio >= 0.95 && ratio <= 1.05 ? imageSrc : null);
+              }}
+              style={{ maxWidth: isSquareImage ? '75%' : '100%', height: 'auto', maxHeight: isTablet ? '300px' : '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)' }}
             />
           </div>
         </div>

@@ -401,7 +401,8 @@
 }
 
 /* ─── Blurry Gradient Transition: Bottom of About ("Hey! I'm Toby") ─── */
-.about-bottom-blurry-transition {
+.about-bottom-blurry-transition,
+.experience-projects-blurry-transition {
   position: absolute;
   bottom: -4px;
   left: 0;
@@ -412,7 +413,8 @@
   overflow: hidden;
 }
 
-.about-bottom-blurry-transition .blur-backdrop {
+.about-bottom-blurry-transition .blur-backdrop,
+.experience-projects-blurry-transition .blur-backdrop {
   position: absolute;
   inset: -4px 0 0 0;
   backdrop-filter: blur(24px);
@@ -421,7 +423,8 @@
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 50%, black 100%);
 }
 
-.about-bottom-blurry-transition .color-gradient {
+.about-bottom-blurry-transition .color-gradient,
+.experience-projects-blurry-transition .color-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom,
@@ -429,6 +432,12 @@
       rgba(2, 7, 22, 0.4) 40%,
       rgba(2, 7, 22, 0.85) 75%,
       #020716 100%);
+}
+
+/* Scrolls with the runway boundary, not the pinned experience viewport. */
+.experience-projects-blurry-transition {
+  height: clamp(120px, 18vh, 220px);
+  z-index: 9;
 }
 
 /* ─── Blurry Gradient Transition: Top of Map / Experience Section ─── */

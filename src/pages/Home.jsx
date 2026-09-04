@@ -8,6 +8,16 @@ import CyberDecryptHeading from '../components/CyberDecryptHeading';
 import CyberDecryptText from '../components/CyberDecryptText';
 import { uiucCourses, ucsdCourses } from '../data/education';
 import { skillsData } from '../data/skills';
+import { siteLinks } from '../data/siteLinks';
+
+// Keep the original assets intact; only brighten dark monochrome skill logos.
+const darkSkillLogos = new Set(['Markdown', 'Ollama']);
+
+const ConfiguredLink = ({ href, children, ...props }) => href ? (
+  <a {...props} className="configured-site-link" href={href} target="_blank" rel="noopener noreferrer">
+    {children}
+  </a>
+) : <div {...props}>{children}</div>;
 
 const Home = () => {
   const [selectedProject, setSelectedProject] = useState(null);
@@ -159,6 +169,10 @@ const Home = () => {
             setDetailSource(source);
             setSelectedExperience(exp);
           }} />
+          <div className="experience-projects-blurry-transition" aria-hidden="true">
+            <div className="blur-backdrop" />
+            <div className="color-gradient" />
+          </div>
         </div>
 
         {/* ─── Section 03: Works × Projects (Pinned Horizontal Scroll) ─── */}
@@ -192,7 +206,7 @@ const Home = () => {
                   backdropFilter: 'blur(10px)'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <ConfiguredLink href={siteLinks.education.UIUC} title="Visit UIUC (opens in a new tab)" style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '16px', flexWrap: 'wrap' }}>
                   <div
                     style={{
                       background: '#ffffff',
@@ -224,7 +238,7 @@ const Home = () => {
                       GPA: 4.0 / 4.0 • Dean's List
                     </p>
                   </div>
-                </div>
+                </ConfiguredLink>
                 <p style={{ fontSize: '0.9rem', color: '#a0a0ab', marginBottom: '10px', fontWeight: '500' }}>
                   Selected Coursework:
                 </p>
@@ -283,7 +297,7 @@ const Home = () => {
                   }}
                 >
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <ConfiguredLink href={siteLinks.education.UCSD} title="Visit UC San Diego Extended Studies (opens in a new tab)" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                       <div
                         style={{
                           background: '#ffffff',
@@ -315,7 +329,7 @@ const Home = () => {
                           GPA: 4.0 / 4.0
                         </p>
                       </div>
-                    </div>
+                    </ConfiguredLink>
                     <p style={{ fontSize: '0.8rem', color: '#a0a0ab', marginBottom: '8px', fontWeight: '500' }}>
                       Curriculum &amp; Specializations:
                     </p>
@@ -417,8 +431,10 @@ const Home = () => {
               {/* Skills Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '14px' }}>
                 {skillsData[activeSkillCategory].map((skill) => (
-                  <div
+                  <ConfiguredLink
                     key={skill}
+                    href={siteLinks.skills[skill]}
+                    title={siteLinks.skills[skill] ? `Learn about ${skill} (opens in a new tab)` : undefined}
                     style={{
                       background: 'rgba(10, 19, 37, 0.6)',
                       border: '1px solid rgba(58, 197, 163, 0.15)',
@@ -444,7 +460,12 @@ const Home = () => {
                     <img
                       src={`${import.meta.env.BASE_URL}images/skills/${skill.replace(/[\/\\]/g, '_').toLowerCase()}.png`}
                       alt={skill}
-                      style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        objectFit: 'contain',
+                        filter: darkSkillLogos.has(skill) ? 'brightness(0) invert(1)' : undefined
+                      }}
                       onError={(e) => {
                         e.target.style.display = 'none';
                       }}
@@ -452,7 +473,7 @@ const Home = () => {
                     <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#ffffff' }}>
                       {skill}
                     </span>
-                  </div>
+                  </ConfiguredLink>
                 ))}
               </div>
             </div>
