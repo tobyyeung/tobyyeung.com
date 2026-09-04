@@ -23,6 +23,11 @@ const CyberDecryptText = ({
 }) => {
   const containerRef = useRef(null);
   const textLength = text.length;
+  const tokens = useMemo(() => Array.from(text.matchAll(/\S+|\s+/g), match => ({
+    value: match[0],
+    start: match.index,
+    isSpace: /^\s+$/.test(match[0])
+  })), [text]);
 
   const [resolvedCount, setResolvedCount] = useState(textLength); // initially full text
   const [randomGlyphs, setRandomGlyphs] = useState(() =>
@@ -207,91 +212,44 @@ const CyberDecryptText = ({
         position: 'relative'
       }}
     >
-      {text.split('').map((char, index) => {
-        const isResolved = resolvedCount > index;
+      {tokens.map(token => token.isSpace ? token.value : (
+        <span className="cyber-decrypt-word" key={token.start}>
+          {token.value.split('').map((char, offset) => {
+            const index = token.start + offset;
+            const isHoverGlitched = Boolean(hoverGlitches[index]);
+            const isScrambling = isHoverGlitched || resolvedCount <= index;
+            const type = charTypes[index];
+            const Character = type === 'strong' ? 'strong' : 'span';
+            const glyph = isHoverGlitched
+              ? hoverGlitches[index]
+              : randomGlyphs[index] || char;
 
-        // Preserve spaces
-        if (char === ' ') {
-          return (
-            <span
-              key={index}
-              onMouseEnter={() => handleCharHover(index)}
-              style={{ display: 'inline-block', width: '0.28em' }}
-            >
-              &nbsp;
-            </span>
-          );
-        }
-
-        const isHoverGlitched = Boolean(hoverGlitches[index]);
-        const charToShow = isHoverGlitched
-          ? hoverGlitches[index]
-          : isResolved
-            ? char
-            : randomGlyphs[index] || getRandomGlyph();
-
-        const type = charTypes[index];
-
-        // Active localized hover scramble
-        if (isHoverGlitched) {
-          return (
-            <span
-              key={index}
-              onMouseEnter={() => handleCharHover(index)}
-              className="glyph-hover-scrambling"
-            >
-              {charToShow}
-            </span>
-          );
-        }
-
-        // Initial decryption scramble
-        if (!isResolved) {
-          return (
-            <span key={index} className="glyph-p-scrambling">
-              {charToShow}
-            </span>
-          );
-        }
-
-        // Resolved highlighted or normal text
-        if (type === 'highlight') {
-          return (
-            <span
-              key={index}
-              onMouseEnter={() => handleCharHover(index)}
-              className="highlight glyph-p-resolved"
-            >
-              {charToShow}
-            </span>
-          );
-        }
-
-        if (type === 'strong') {
-          return (
-            <strong
-              key={index}
-              onMouseEnter={() => handleCharHover(index)}
-              className="glyph-p-resolved"
-            >
-              {charToShow}
-            </strong>
-          );
-        }
-
-        return (
-          <span
-            key={index}
-            onMouseEnter={() => handleCharHover(index)}
-            className="glyph-p-resolved"
-          >
-            {charToShow}
-          </span>
-        );
-      })}
-
-      {/* Trailing Cyber Cursor during initial decryption */}
-      {isDecrypting && <span className="cyber-decrypt-cursor">▋</span>}
+            return (
+              <Character
+                key={index}
+                className={`cyber-decrypt-char${type === 'highlight' ? ' highlight' : ''}`}
+                onMouseEnter={() => handleCharHover(index)}
+              >
+                {/* Original text always sets the width, weight, and line height. */}
+                <span className={`cyber-decrypt-original${isScrambling ? ' is-scrambling' : ''}`}>
+                  {char}
+                </span>
+                {isScrambling && (
+                  <span
+                    aria-hidden="true"
+                    className={`cyber-decrypt-overlay ${isHoverGlitched ? 'glyph-hover-scrambling' : 'glyph-p-scrambling'}`}
+                  >
+                    {glyph}
+                  </span>
+                )}
+              </Character>
+            );
+          })}
+          {isDecrypting && token.start + token.value.length === textLength && (
+            <span className="cyber-decrypt-cursor" aria-hidden="true">▋</span>
+          )}
+        </span>
+      ))}
     </p>
   );
 };

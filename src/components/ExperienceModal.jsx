@@ -137,10 +137,10 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
             <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: accentColor, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {exp.dateStr}
             </span>
-            <h2 style={{ fontSize: 'clamp(1.05rem, 1.6vw, 1.35rem)', fontWeight: 'bold', color: 'var(--text-primary, #ffffff)', margin: '0.08rem 0 0.05rem', lineHeight: '1.2' }}>
+            <h2 style={{ fontSize: 'clamp(1.2rem, 1.9vw, 1.55rem)', fontWeight: 'bold', color: 'var(--text-primary, #ffffff)', margin: '0.08rem 0 0.05rem', lineHeight: '1.2' }}>
               {exp.role}
             </h2>
-            <h3 style={{ fontSize: '0.84rem', fontWeight: '500', color: 'var(--text-secondary, #a0a0ab)', margin: 0 }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: '500', color: 'var(--text-secondary, #a0a0ab)', margin: 0 }}>
               {exp.title}
             </h3>
           </div>
@@ -166,7 +166,7 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
               <h4 style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: accentColor, marginBottom: '0.35rem' }}>
                 Overview
               </h4>
-              <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary, #d4d4d8)', lineHeight: '1.55', margin: 0 }}>
+              <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary, #d4d4d8)', lineHeight: '1.55', margin: 0 }}>
                 {exp.shortDesc}
               </p>
             </div>
@@ -181,7 +181,7 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.55rem',
-                  fontSize: '0.88rem',
+                  fontSize: '1rem',
                   color: 'var(--text-primary, #ffffff)',
                   listStyleType: 'none',
                   paddingLeft: '1.1rem',
@@ -211,9 +211,9 @@ const ExperienceModal = ({ exp, onClose, sourceElement }) => {
                         background: 'rgba(255, 255, 255, 0.08)',
                         border: '1px solid var(--border-glass, rgba(255, 255, 255, 0.15))',
                         color: 'var(--text-primary, #ffffff)',
-                        padding: '0.25rem 0.65rem',
+                        padding: '0.2rem 0.5rem',
                         borderRadius: '9999px',
-                        fontSize: '0.78rem',
+                        fontSize: '0.68rem',
                         fontWeight: '500'
                       }}
                     >

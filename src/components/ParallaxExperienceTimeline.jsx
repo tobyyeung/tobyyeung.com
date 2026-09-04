@@ -281,7 +281,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
                 <h3
                   style={{
                     fontFamily: "'Oswald', sans-serif",
-                    fontSize: 'clamp(1rem, 2.1vmin, 1.6rem)',
+                    fontSize: 'clamp(1.15rem, 2.5vmin, 1.8rem)',
                     fontWeight: '700',
                     color: '#ffffff',
                     letterSpacing: '0.04em',
@@ -296,7 +296,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
                   <span
                     style={{
                       color: '#3AC5A3',
-                      fontSize: 'clamp(0.8rem, 1.5vmin, 1.02rem)',
+                      fontSize: 'clamp(0.95rem, 1.8vmin, 1.15rem)',
                       fontWeight: '600',
                       fontFamily: "'Inter', sans-serif"
                     }}
@@ -331,7 +331,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
           {/* Description Paragraph */}
           <p
             style={{
-              fontSize: 'clamp(0.8rem, 1.5vmin, 1rem)',
+              fontSize: 'clamp(0.95rem, 1.8vmin, 1.15rem)',
               lineHeight: '1.65',
               color: 'rgba(255, 255, 255, 0.9)',
               marginBottom: '20px',
@@ -346,7 +346,7 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
             style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '8px',
+              gap: '6px',
               transform: 'translateZ(15px)'
             }}
           >
@@ -354,14 +354,14 @@ const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
               <span
                 key={tag}
                 style={{
-                  fontSize: '0.75rem',
+                  fontSize: '0.65rem',
                   fontWeight: '600',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   color: '#3AC5A3',
                   background: 'rgba(58, 197, 163, 0.1)',
                   border: '1px solid rgba(58, 197, 163, 0.3)',
-                  padding: '4px 11px',
+                  padding: '3px 8px',
                   borderRadius: '6px'
                 }}
               >

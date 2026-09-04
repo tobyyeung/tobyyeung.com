@@ -150,14 +150,13 @@ const Header = () => {
           <div className="header-tooltip-wrapper">
             <button className="header-logo-group" onClick={() => scrollToSection('hero')}>
               <img
-                src={import.meta.env.BASE_URL + 'images/logo.png'}
-                alt="Toby Yeung Logo"
+                src={import.meta.env.BASE_URL + 'images/self.jpg'}
+                alt="Toby Yeung"
                 className="header-logo-img"
-                style={{ background: '#ffffff', padding: '3px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}
               />
               <div className="header-logo-text" style={{ textAlign: 'left', alignItems: 'flex-start' }}>
                 <span className="header-logo-name" style={{ textAlign: 'left' }}>Toby Yeung</span>
-                <span className="header-logo-subtitle" style={{ textAlign: 'left' }}>Computer Science + Economics @ UIUC</span>
+                <span className="header-logo-subtitle" style={{ textAlign: 'left' }}>CS + Econ @ UIUC</span>
               </div>
             </button>
             <span className="tooltip-text">Back to Top</span>

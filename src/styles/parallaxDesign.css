@@ -162,7 +162,7 @@
 
 /* ─── Parallax Header & Sky ─────────────────────────────────────────────── */
 .header-placeholder {
-  height: 200vh;
+  height: 175vh;
   position: relative;
   width: 100%;
 }
@@ -591,6 +591,37 @@
 .cyber-decrypt-paragraph {
   user-select: text;
   transition: opacity 0.2s ease;
+}
+
+.cyber-decrypt-word {
+  display: inline-block;
+  position: relative;
+  white-space: nowrap;
+}
+
+.cyber-decrypt-char {
+  display: inline-block;
+  position: relative;
+}
+
+.cyber-decrypt-original.is-scrambling {
+  color: transparent;
+  text-shadow: none;
+}
+
+.cyber-decrypt-overlay {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cyber-decrypt-word > .cyber-decrypt-cursor {
+  position: absolute;
+  left: 100%;
+  bottom: 0;
+  pointer-events: none;
 }
 
 @keyframes glyphDecryptedSnap {
@@ -1293,7 +1324,7 @@
   }
 
   .header-placeholder {
-    height: 140vh;
+    height: 175vh;
   }
 }
 

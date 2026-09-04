@@ -8,6 +8,7 @@ import CyberDecryptHeading from '../components/CyberDecryptHeading';
 import CyberDecryptText from '../components/CyberDecryptText';
 import { uiucCourses, ucsdCourses } from '../data/education';
 import SkillsSection from '../components/SkillsSection';
+import ImageMeteorShower from '../components/ImageMeteorShower';
 import { siteLinks } from '../data/siteLinks';
 
 const ConfiguredLink = ({ href, children, ...props }) => href ? (
@@ -88,7 +89,9 @@ const Home = () => {
       </div>
 
       {/* Scroll distance placeholder for header parallax ascent */}
-      <div ref={placeholderRef} className="header-placeholder" />
+      <div ref={placeholderRef} className="header-placeholder">
+        <ImageMeteorShower />
+      </div>
 
       {/* ─── Editorial Portfolio Sections (Inspired by r4ms3s.cz) ─── */}
       <div className="section-coder">
@@ -102,41 +105,40 @@ const Home = () => {
 
             <div className="article-content-col">
               <CyberDecryptText
-                text="My name is Toby Yeung — I’m a Full-Stack Developer & AI Systems Engineer."
+                text="Computer Science and Economics student at UIUC with a 4.0 GPA, seeking a Summer 2026 Software Engineer internship."
                 highlights={[
-                  { text: 'Toby Yeung', className: 'strong' },
-                  { text: 'Full-Stack Developer', className: 'highlight' },
-                  { text: 'AI Systems Engineer', className: 'highlight' }
+                  { text: 'Computer Science and Economics', className: 'strong' },
+                  { text: 'UIUC', className: 'strong' },
+                  { text: '4.0 GPA', className: 'highlight' },
+                  { text: 'Summer 2026 Software Engineer internship', className: 'highlight' }
                 ]}
                 delay={200}
                 speed={32}
               />
               <CyberDecryptText
-                text="Currently studying Computer Science & Economics at the University of Illinois Urbana-Champaign (UIUC)."
+                text="Built web and AI applications with React, Flask, and MySQL, and deployed services on AWS using Docker and Kubernetes."
                 highlights={[
-                  { text: 'Computer Science & Economics', className: 'strong' },
-                  { text: 'University of Illinois Urbana-Champaign (UIUC)', className: 'strong' }
+                  { text: 'React', className: 'strong' },
+                  { text: 'Flask', className: 'strong' },
+                  { text: 'MySQL', className: 'strong' },
+                  { text: 'AWS', className: 'strong' },
+                  { text: 'Docker', className: 'strong' },
+                  { text: 'Kubernetes', className: 'strong' }
                 ]}
                 delay={450}
                 speed={32}
               />
               <CyberDecryptText
-                text="I specialize in engineering high-performance web applications, scalable containerized microservices, local LLM inference pipelines, and Retrieval-Augmented Generation (RAG) architectures."
-                delay={700}
-                speed={30}
-              />
-              <CyberDecryptText
-                text="Do you need React, FastAPI, Python, Docker, Kubernetes, PostgreSQL, or cutting-edge AI / RAG integration?"
+                text="Experienced in RAG systems with LangChain, OpenAI, and ChromaDB, plus C++, Python, computer vision, and robotics."
                 highlights={[
-                  { text: 'React', className: 'strong' },
-                  { text: 'FastAPI', className: 'strong' },
-                  { text: 'Python', className: 'strong' },
-                  { text: 'Docker', className: 'strong' },
-                  { text: 'Kubernetes', className: 'strong' },
-                  { text: 'PostgreSQL', className: 'strong' },
-                  { text: 'AI / RAG', className: 'strong' }
+                  { text: 'RAG', className: 'strong' },
+                  { text: 'LangChain', className: 'strong' },
+                  { text: 'OpenAI', className: 'strong' },
+                  { text: 'ChromaDB', className: 'strong' },
+                  { text: 'C++', className: 'strong' },
+                  { text: 'Python', className: 'strong' }
                 ]}
-                delay={950}
+                delay={700}
                 speed={32}
               />
               <p className="article-text">

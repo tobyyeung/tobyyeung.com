@@ -87,8 +87,7 @@ const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }
         </div>
         <div className="parallax-title-tags">
           <span className="parallax-tag">CS &amp; Economics @ UIUC</span>
-          <span className="parallax-tag">AI Researcher</span>
-          <span className="parallax-tag">FastAPI × React × RAG</span>
+          <span className="parallax-tag">AI Researcher @ INVITE Institute</span>
         </div>
       </div>
 
