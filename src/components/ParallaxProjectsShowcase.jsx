@@ -28,6 +28,9 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
     <div
       ref={cardRef}
       className="horizontal-project-card-wrapper"
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${project.title}`}
       style={{
         width: 'clamp(340px, 28vw, 440px)',
         flexShrink: 0,
@@ -38,6 +41,12 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={(event) => onSelect(project, event.currentTarget)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(project, event.currentTarget);
+        }
+      }}
     >
       <div
         className="horizontal-project-card"
@@ -244,7 +253,7 @@ const ParallaxProjectsShowcase = ({ onSelectProject }) => {
   const trackRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const dragRef = useRef({ active: false, moved: false, startX: 0, startScrollLeft: 0 });
+  const dragRef = useRef({ active: false, hasDragged: false, startX: 0, startScrollLeft: 0, pointerId: null });
 
   // Keep the progress indicator and arrow state in sync with ordinary horizontal scrolling.
   useEffect(() => {
@@ -271,34 +280,65 @@ const ParallaxProjectsShowcase = ({ onSelectProject }) => {
   };
 
   const handlePointerDown = (event) => {
+    // Only drag with primary mouse button or touch
+    if (event.button !== 0) return;
     const track = trackRef.current;
     if (!track) return;
-    dragRef.current = { active: true, moved: false, startX: event.clientX, startScrollLeft: track.scrollLeft };
-    setIsDragging(true);
-    track.setPointerCapture?.(event.pointerId);
+    dragRef.current = {
+      active: true,
+      hasDragged: false,
+      startX: event.clientX,
+      startScrollLeft: track.scrollLeft,
+      pointerId: event.pointerId
+    };
   };
 
   const handlePointerMove = (event) => {
     const track = trackRef.current;
     if (!track || !dragRef.current.active) return;
-    const distance = event.clientX - dragRef.current.startX;
-    if (Math.abs(distance) > 4) dragRef.current.moved = true;
-    track.scrollLeft = dragRef.current.startScrollLeft - distance;
+    const deltaX = event.clientX - dragRef.current.startX;
+
+    // Only engage drag-scrolling if movement surpasses intentional drag threshold
+    if (!dragRef.current.hasDragged) {
+      if (Math.abs(deltaX) < 8) return;
+      dragRef.current.hasDragged = true;
+      setIsDragging(true);
+      try {
+        track.setPointerCapture?.(dragRef.current.pointerId);
+      } catch (err) {
+        // ignore if pointerId invalid
+      }
+    }
+
+    track.scrollLeft = dragRef.current.startScrollLeft - deltaX;
   };
 
-  const stopDragging = (event) => {
+  const stopDragging = () => {
+    if (!dragRef.current.active) return;
+    const track = trackRef.current;
+    if (dragRef.current.pointerId != null && track?.hasPointerCapture?.(dragRef.current.pointerId)) {
+      try {
+        track.releasePointerCapture(dragRef.current.pointerId);
+      } catch (err) {
+        // ignore
+      }
+    }
     dragRef.current.active = false;
     setIsDragging(false);
-    if (event?.currentTarget?.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
+
+    if (dragRef.current.hasDragged) {
+      setTimeout(() => {
+        dragRef.current.hasDragged = false;
+      }, 50);
     }
   };
 
   const preventClickAfterDrag = (event) => {
-    if (!dragRef.current.moved) return;
-    event.preventDefault();
-    event.stopPropagation();
-    dragRef.current.moved = false;
+    if (dragRef.current.hasDragged) {
+      event.preventDefault();
+      event.stopPropagation();
+      dragRef.current.hasDragged = false;
+    }
   };
 
   const handleTrackWheel = (event) => {
