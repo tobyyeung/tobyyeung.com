@@ -20,6 +20,16 @@ const CALIFORNIA_EXPERIENCE_IDS = new Set([
 ]);
 
 const US_CENTER = { lat: 39.5, lng: -96.0 };
+export const EXPERIENCE_COLORS = {
+  invite: '#63d8ca', uiuc_tech_services: '#82aaff', mathnasium: '#ffc66d',
+  techknowhow_lead: '#b79aff', thecoderschool: '#ff92b4',
+  techknowhow_asst: '#70db91', kesselworks: '#70d5ff'
+};
+const LABEL_DIRECTIONS = {
+  techknowhow_lead: [-1, -1], techknowhow_asst: [1, -1],
+  mathnasium: [1, 1], thecoderschool: [-1, 1],
+  invite: [-1, -1], uiuc_tech_services: [1, 1], kesselworks: [1, -1]
+};
 const US_ZOOM = 4;
 const TARGET_ZOOM = 11; // Deep city zoom
 const FLIGHT_ZOOM = 5;
@@ -245,11 +255,18 @@ const loadGoogleMapsScript = (apiKey) => {
   return googleMapsPromise;
 };
 
-const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightChange }) => {
+const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightChange, onOpenDetails, onOverview, timelineMode = false }) => {
+  const [isFlying, setIsFlying] = useState(false);
+  const focusedExperience = experiences.find((experience) => experience.id === activeExpId);
+  const selectExperienceRef = useRef(onSelectExperience);
+  const openDetailsRef = useRef(onOpenDetails);
+  useEffect(() => { openDetailsRef.current = onOpenDetails; }, [onOpenDetails]);
+  useEffect(() => { selectExperienceRef.current = onSelectExperience; }, [onSelectExperience]);
   const containerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const prevExpIdRef = useRef(null);
   const cancelPanRef = useRef(null);
+  const markerRefs = useRef([]);
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [shouldLoadMap, setShouldLoadMap] = useState(false);
 
@@ -304,22 +321,244 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
 
     const map = new google.maps.Map(containerRef.current, {
       center: US_CENTER,
-      zoom: US_ZOOM,
+      zoom: timelineMode ? 4.5 : US_ZOOM,
+      minZoom: timelineMode ? 4.5 : US_ZOOM,
       isFractionalZoomEnabled: true,
       disableDefaultUI: true,
       gestureHandling: 'none',
+      disableDoubleClickZoom: true,
       keyboardShortcuts: false,
       backgroundColor: '#0e2246',
       styles: TIMELINE_MAP_BRIGHT_STYLE
     });
 
     mapInstanceRef.current = map;
+    prevExpIdRef.current = null;
 
     return () => {
       cancelPanRef.current?.();
+      markerRefs.current.forEach((marker) => marker.setMap(null));
+      markerRefs.current = [];
       mapInstanceRef.current = null;
     };
-  }, [mapsLoaded]);
+  }, [mapsLoaded, timelineMode]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !window.google?.maps) return undefined;
+    map.setOptions({ gestureHandling: 'none', disableDoubleClickZoom: true });
+    markerRefs.current.forEach((marker) => marker.setMap(null));
+    markerRefs.current = [];
+    if (!timelineMode) return undefined;
+
+    const labelOverlay = new window.google.maps.OverlayView();
+    let labelRoot;
+    let connectorSvg;
+    let labelItems = [];
+    labelOverlay.onAdd = () => {
+      labelRoot = document.createElement('div');
+      labelRoot.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+      labelOverlay.getPanes().floatPane.appendChild(labelRoot);
+      connectorSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      connectorSvg.style.cssText = 'position:absolute;overflow:visible;pointer-events:none;width:1px;height:1px;';
+      labelRoot.appendChild(connectorSvg);
+      labelItems = experiences.map((experience) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'experience-map-label';
+        button.dataset.mapExperience = experience.id;
+        button.style.borderColor = EXPERIENCE_COLORS[experience.id];
+        button.style.color = EXPERIENCE_COLORS[experience.id];
+        const role = document.createElement('strong');
+        role.textContent = experience.role;
+        const icon = document.createElement('img');
+        icon.src = experience.logo;
+        icon.alt = '';
+        button.setAttribute('aria-label', `${experience.role} at ${experience.title}`);
+        button.append(icon);
+        if (experience.id === activeExpId) {
+          button.classList.add('is-expanded');
+          const heading = document.createElement('span');
+          heading.className = 'map-label-card-heading';
+          const titles = document.createElement('span');
+          const company = document.createElement('strong');
+          company.className = 'map-label-company';
+          company.textContent = experience.title;
+          role.className = 'map-label-role';
+          titles.append(company, role);
+          heading.append(icon, titles);
+          const details = document.createElement('span');
+          details.className = 'map-label-details map-label-meta';
+          details.textContent = `${experience.dateStr} · ${LOCATION_COORDS[experience.id].city}`;
+          const summary = document.createElement('span');
+          summary.className = 'map-label-details map-label-summary';
+          summary.textContent = experience.shortDesc;
+          const tags = document.createElement('span');
+          tags.className = 'map-label-tags';
+          experience.tags.forEach((tag) => {
+            const pill = document.createElement('span');
+            pill.textContent = tag;
+            tags.appendChild(pill);
+          });
+          const prompt = document.createElement('span');
+          prompt.className = 'map-label-details';
+          prompt.textContent = 'View full experience →';
+          button.replaceChildren(heading, details, summary, tags, prompt);
+        }
+        button.onclick = () => experience.id === activeExpId
+          ? openDetailsRef.current?.(experience, button)
+          : selectExperienceRef.current?.(experience);
+        window.google.maps.OverlayView.preventMapHitsAndGesturesFrom(button);
+        labelRoot.appendChild(button);
+        const connector = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        connector.setAttribute('fill', 'none');
+        connector.setAttribute('stroke', EXPERIENCE_COLORS[experience.id]);
+        connector.setAttribute('stroke-width', '1.5');
+        connector.setAttribute('stroke-linecap', 'round');
+        connector.setAttribute('stroke-linejoin', 'round');
+        connectorSvg.appendChild(connector);
+        return { experience, button, connector };
+      });
+    };
+    labelOverlay.draw = () => {
+      const projection = labelOverlay.getProjection();
+      if (!projection || !labelRoot) return;
+      const bounds = map.getDiv().getBoundingClientRect();
+      const header = map.getDiv().closest('.experience-sticky-viewport')?.querySelector('.timeline-overlay-header');
+      const headerBottom = header?.getBoundingClientRect().bottom ?? bounds.top;
+      const labelTop = Math.max(12, headerBottom - bounds.top + 16);
+      const origin = projection.fromContainerPixelToLatLng(new window.google.maps.Point(0, 0));
+      const offset = projection.fromLatLngToDivPixel(origin);
+      const placed = [];
+      const routes = [];
+      const crosses = (a, b, c, d) => {
+        const turn = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+        return turn(a, b, c) * turn(a, b, d) < 0 && turn(c, d, a) * turn(c, d, b) < 0;
+      };
+      const routeFor = (x, y, width, height, point) => {
+        if (activeExpId) {
+          const edges = [
+            { x: x + width / 2, y, dx: 0, dy: -16 },
+            { x: x + width / 2, y: y + height, dx: 0, dy: 16 },
+            { x, y: y + height / 2, dx: -16, dy: 0 },
+            { x: x + width, y: y + height / 2, dx: 16, dy: 0 }
+          ];
+          const closest = edges.reduce((best, edge) =>
+            Math.hypot(edge.x - point.x, edge.y - point.y) < Math.hypot(best.x - point.x, best.y - point.y) ? edge : best
+          );
+          const start = { x: closest.x, y: closest.y };
+          return [start, point];
+        }
+        const below = point.y >= y + height / 2;
+        const start = { x: x + width / 2, y: y + (below ? height : 0) };
+        return [start, point];
+      };
+      labelItems.forEach(({ experience, button, connector }) => {
+        connector.setAttribute('d', '');
+        const locationMarker = markerRefs.current[experiences.findIndex((item) => item.id === experience.id)];
+        if (locationMarker) {
+          const zoomProgress = Math.max(0, Math.min(1, (map.getZoom() - 6) / 5));
+          const scale = experience.id === activeExpId ? 4 + zoomProgress * 5 : 4;
+          const icon = locationMarker.getIcon();
+          if (icon.scale !== scale) locationMarker.setIcon({ ...icon, scale });
+          locationMarker.setZIndex(experience.id === activeExpId ? 30 : experience.id === 'techknowhow_asst' ? 20 : 10);
+        }
+        const point = projection.fromLatLngToContainerPixel(new window.google.maps.LatLng(LOCATION_COORDS[experience.id]));
+        // Separate nearby pins at overview scale only. Keep the
+        // connector endpoint aligned with the displayed pin, then restore true
+        // coordinates as the camera zooms into their locations.
+        const pinOffsets = {
+          invite: [-6, 0], uiuc_tech_services: [6, 0],
+          techknowhow_lead: [-7, -7], techknowhow_asst: [7, -7],
+          thecoderschool: [-7, 7], mathnasium: [7, 7]
+        };
+        const pinOffset = pinOffsets[experience.id];
+        if (pinOffset) {
+          const separation = Math.max(0, Math.min(1, (9 - map.getZoom()) / 3));
+          point.x += pinOffset[0] * separation;
+          point.y += pinOffset[1] * separation;
+          const marker = markerRefs.current[experiences.findIndex((item) => item.id === experience.id)];
+          marker?.setPosition(projection.fromContainerPixelToLatLng(point));
+        }
+        button.hidden = point.x < 0 || point.y < 0 || point.x > bounds.width || point.y > bounds.height;
+        if (button.hidden) return;
+        button.style.maxHeight = `${Math.max(40, bounds.height - labelTop - 12)}px`;
+        button.style.overflowY = 'auto';
+        const width = button.offsetWidth;
+        const height = button.offsetHeight;
+        let best;
+        let bestScore = Infinity;
+        const [side, vertical] = LABEL_DIRECTIONS[experience.id];
+        const closerLabel = experience.id !== 'mathnasium';
+        const horizontalGap = experience.id === activeExpId ? 90 : (closerLabel ? 12 : 40);
+        const preferredX = point.x + side * (width / 2 + horizontalGap);
+        const preferredY = point.y + vertical * (height / 2 + (closerLabel ? 18 : 60));
+        // Search nearby slots on every map redraw, including co-located roles.
+        for (let y = labelTop; y <= bounds.height - height - 8; y += 16) {
+          for (let x = 8; x <= bounds.width - width - 8; x += 16) {
+            if (placed.some((r) => x < r.x + r.width + 8 && x + width + 8 > r.x && y < r.y + r.height + 8 && y + height + 8 > r.y)) continue;
+            // Leave space between the location and its diagram callout.
+            const centerX = x + width / 2;
+            const centerY = y + height / 2;
+            const wrongSide = (centerX - point.x) * side < 0 ? 250 : 0;
+            const wrongVertical = (centerY - point.y) * vertical < 0 ? 250 : 0;
+            const route = routeFor(x, y, width, height, point);
+            let crossings = 0;
+            for (let i = 0; i < route.length - 1; i += 1) {
+              for (const existing of routes) {
+                for (let j = 0; j < existing.length - 1; j += 1) {
+                  if (crosses(route[i], route[i + 1], existing[j], existing[j + 1])) crossings += 1;
+                }
+              }
+              for (const box of placed) {
+                const corners = [{ x: box.x, y: box.y }, { x: box.x + box.width, y: box.y }, { x: box.x + box.width, y: box.y + box.height }, { x: box.x, y: box.y + box.height }];
+                if (corners.some((corner, j) => crosses(route[i], route[i + 1], corner, corners[(j + 1) % 4]))) crossings += 2;
+              }
+            }
+            const score = Math.hypot(centerX - preferredX, centerY - preferredY) + wrongSide + wrongVertical + crossings * 600;
+            if (score < bestScore) { bestScore = score; best = { x, y, width, height }; }
+          }
+        }
+        button.hidden = !best;
+        if (!best) return;
+        placed.push(best);
+        button.style.left = `${offset.x + best.x}px`;
+        button.style.top = `${offset.y + best.y}px`;
+        // Diagram-style leader: a short horizontal shoulder and an angled
+        // line to the geographic dot, without an arrowhead.
+        const route = routeFor(best.x, best.y, width, height, point);
+        routes.push(route);
+        connector.setAttribute('d', route.map((p, i) => `${i ? 'L' : 'M'} ${offset.x + p.x},${offset.y + p.y}`).join(' '));
+      });
+    };
+    labelOverlay.onRemove = () => { labelRoot?.remove(); };
+    labelOverlay.setMap(map);
+    markerRefs.current = experiences.map((experience) => {
+      const location = LOCATION_COORDS[experience.id];
+      const marker = new window.google.maps.Marker({
+        map,
+        position: location,
+        // Keep a consistent stacking order for the shared TechKnowHow location.
+        zIndex: experience.id === 'techknowhow_asst' ? 20 : 10,
+        title: `${experience.role} @ ${experience.title}`,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 4,
+          fillColor: EXPERIENCE_COLORS[experience.id],
+          fillOpacity: 1,
+          strokeColor: '#021022',
+          strokeWeight: 1
+        }
+      });
+      marker.addListener('click', () => selectExperienceRef.current?.(experience));
+      return marker;
+    });
+    return () => {
+      labelOverlay.setMap(null);
+      markerRefs.current.forEach((marker) => marker.setMap(null));
+      markerRefs.current = [];
+    };
+  }, [mapsLoaded, timelineMode, activeExpId]);
 
   // Robust, Glitch-Proof Camera Flight Transitions
   useEffect(() => {
@@ -327,13 +566,15 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
     if (!map || !window.google?.maps || !(map.getDiv?.() instanceof Element)) return;
 
     const fly = (options) => {
+      setIsFlying(true);
       onFlightChange?.(true);
       return animateCamera(map, options, () => {
       const city = LOCATION_COORDS[activeExpId];
-      if (city && window.innerWidth <= 1150) {
+      if (city && !timelineMode && window.innerWidth <= 1150) {
         map.setCenter(getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
       }
       onFlightChange?.(false);
+      setIsFlying(false);
       });
     };
 
@@ -354,7 +595,7 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
           : US_CENTER,
         toCenter: US_CENTER,
         fromZoom: map.getZoom() || TARGET_ZOOM,
-        toZoom: US_ZOOM,
+        toZoom: timelineMode ? 4.5 : US_ZOOM,
         durationMs: 700
       });
       return;
@@ -364,14 +605,55 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
     if (!rawTarget) return;
 
     // Adjusted target coordinate considering layout
-    const targetLoc = getAdjustedCenter(rawTarget.lat, rawTarget.lng, map, activeExpId);
+    const targetLoc = timelineMode
+      ? { lat: rawTarget.lat, lng: rawTarget.lng }
+      : getAdjustedCenter(rawTarget.lat, rawTarget.lng, map, activeExpId);
+
+    if (timelineMode) {
+      let cancelled = false;
+      let cancelStage;
+      setIsFlying(true);
+      onFlightChange?.(true);
+      const finish = () => {
+        if (cancelled) return;
+        setIsFlying(false);
+        onFlightChange?.(false);
+      };
+      const stage = (toCenter, toZoom, durationMs, next) => {
+        if (cancelled) return;
+        const center = map.getCenter();
+        cancelStage = animateCamera(map, {
+          fromCenter: { lat: center.lat(), lng: center.lng() },
+          fromZoom: map.getZoom(), toCenter, toZoom, durationMs
+        }, next);
+      };
+      const overviewZoom = 4.5;
+      const approach = () => stage(targetLoc, overviewZoom, 900,
+        () => stage(targetLoc, TARGET_ZOOM, 1100, finish));
+      const currentCenter = map.getCenter();
+      const sameState = prevId && (
+        (CALIFORNIA_EXPERIENCE_IDS.has(prevId) && CALIFORNIA_EXPERIENCE_IDS.has(activeExpId)) ||
+        (['invite', 'uiuc_tech_services'].includes(prevId) && ['invite', 'uiuc_tech_services'].includes(activeExpId)) ||
+        prevId === activeExpId
+      );
+      if (sameState) {
+        stage(targetLoc, map.getZoom(), 800, finish);
+      } else if (map.getZoom() > overviewZoom + 0.1) {
+        stage({ lat: currentCenter.lat(), lng: currentCenter.lng() }, overviewZoom, 650, approach);
+      } else {
+        approach();
+      }
+      cancelPanRef.current = () => { cancelled = true; cancelStage?.(); };
+      return;
+    }
 
     // Initial entry into Experiences section: clean, direct flight into Illinois
     if (!prevId) {
+      const liveCenter = map.getCenter();
       cancelPanRef.current = fly({
-        fromCenter: US_CENTER,
+        fromCenter: liveCenter ? { lat: liveCenter.lat(), lng: liveCenter.lng() } : US_CENTER,
         toCenter: targetLoc,
-        fromZoom: US_ZOOM,
+        fromZoom: map.getZoom() ?? (timelineMode ? 4.5 : US_ZOOM),
         toZoom: TARGET_ZOOM,
         durationMs: 1050
       });
@@ -440,10 +722,13 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
       flightZoom: FLIGHT_ZOOM
     });
 
-  }, [activeExpId, mapsLoaded]);
+  }, [activeExpId, mapsLoaded, timelineMode]);
 
   // Re-align after responsive layout or header sizing changes, once flights settle.
   useEffect(() => {
+    // Timeline flights already center on the true coordinate. A delayed resize
+    // correction must not teleport the camera in the middle of a staged flight.
+    if (timelineMode) return;
     const map = mapInstanceRef.current;
     const city = LOCATION_COORDS[activeExpId];
     const container = containerRef.current;
@@ -453,7 +738,9 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
       clearTimeout(timer);
       timer = setTimeout(() => {
         if (mapInstanceRef.current !== map || !(map.getDiv?.() instanceof Element)) return;
-        map.setCenter(getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
+        map.setCenter(timelineMode
+          ? { lat: city.lat, lng: city.lng }
+          : getAdjustedCenter(city.lat, city.lng, map, activeExpId, map.getZoom()));
       }, 3200);
     };
     const observer = new ResizeObserver(align);
@@ -466,17 +753,19 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
       observer.disconnect();
       window.removeEventListener('resize', align);
     };
-  }, [activeExpId, mapsLoaded]);
+  }, [activeExpId, mapsLoaded, timelineMode]);
 
   return (
     <div
+      className={timelineMode ? 'experience-explorer-map' : undefined}
       style={{
         position: 'absolute',
         inset: 0,
-        width: '100%',
+        width: timelineMode ? '66%' : '100%',
         height: '100%',
         overflow: 'hidden',
-        pointerEvents: 'none'
+        pointerEvents: timelineMode ? 'auto' : 'none',
+        borderRight: timelineMode ? '1px solid rgba(58, 197, 163, 0.35)' : 'none'
       }}
     >
       {/* Google Maps Viewport with tight top edge feather */}
@@ -501,6 +790,16 @@ const TimelineGoogleMap = ({ activeExpId = null, onSelectExperience, onFlightCha
         }}
       />
 
+      {timelineMode && focusedExperience && (
+        <button
+          type="button"
+          className="experience-map-overview"
+          onClick={onOverview}
+          disabled={isFlying}
+        >
+          ← Back to US
+        </button>
+      )}
       <style>{`
         .gmnoprint, .gm-style-cc, a[href^="https://maps.google.com/maps"],
         .gm-err-container, .gm-err-autocomplete, .gm-err-message, div[aria-label="Map error"] {

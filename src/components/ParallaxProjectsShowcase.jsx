@@ -117,6 +117,7 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
 
           {/* Fit square logos completely; keep the wide screenshot treatment. */}
           <img
+            draggable={false}
             src={project.imageUrl}
             alt={project.title}
             onLoad={(event) => {
@@ -238,130 +239,96 @@ const HorizontalProjectCard = ({ project, index, onSelect }) => {
   );
 };
 
-// ─── Pinned Horizontal Scroll Section with Exact Runway & Wheel Controls ─────
+// ─── Free horizontal project gallery ────────────────────────────────────────
 const ParallaxProjectsShowcase = ({ onSelectProject }) => {
-  const sectionRef = useRef(null);
-  const stickyRef = useRef(null);
   const trackRef = useRef(null);
-
-  const [horizontalTranslate, setHorizontalTranslate] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [runwayHeight, setRunwayHeight] = useState('2200px');
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef({ active: false, moved: false, startX: 0, startScrollLeft: 0 });
 
-  // Measure exact horizontal overflow and set precise runway height (ZERO dead space)
+  // Keep the progress indicator and arrow state in sync with ordinary horizontal scrolling.
   useEffect(() => {
-    const updateRunway = () => {
+    const updateProgress = () => {
       if (!trackRef.current) return;
-      const trackWidth = trackRef.current.scrollWidth;
-      const viewportWidth = window.innerWidth || 1200;
-      const viewportHeight = window.innerHeight || 800;
-      const maxScrollX = Math.max(0, trackWidth - viewportWidth);
-
-      // Pacing multiplier (1.6x) ensures comfortable, smooth horizontal scrolling
-      // Bigger end cushion (1300px) provides plenty of scroll distance keeping "More on GitHub" fully pinned
-      const pacingMultiplier = 1.6;
-      const endCushion = 1300;
-      const calculatedHeight = Math.round(maxScrollX * pacingMultiplier) + viewportHeight + endCushion;
-      setRunwayHeight(`${calculatedHeight}px`);
+      const maxScroll = trackRef.current.scrollWidth - trackRef.current.clientWidth;
+      setScrollProgress(maxScroll > 0 ? trackRef.current.scrollLeft / maxScroll : 0);
     };
 
-    updateRunway();
-    window.addEventListener('resize', updateRunway);
-    const timer1 = setTimeout(updateRunway, 100);
-    const timer2 = setTimeout(updateRunway, 500);
+    const track = trackRef.current;
+    updateProgress();
+    track?.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
 
     return () => {
-      window.removeEventListener('resize', updateRunway);
-      clearTimeout(timer1);
-      clearTimeout(timer2);
+      track?.removeEventListener('scroll', updateProgress);
+      window.removeEventListener('resize', updateProgress);
     };
   }, []);
 
-  // Window scroll handler: converts vertical scroll down the runway to horizontal translation
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!sectionRef.current || !trackRef.current || ticking) return;
-      ticking = true;
-
-      requestAnimationFrame(() => {
-        if (!sectionRef.current || !trackRef.current) {
-          ticking = false;
-          return;
-        }
-
-        const rect = sectionRef.current.getBoundingClientRect();
-        const viewportHeight = window.innerHeight || 800;
-        const totalScrollableDistance = sectionRef.current.offsetHeight - viewportHeight;
-
-        if (totalScrollableDistance <= 0) {
-          ticking = false;
-          return;
-        }
-
-        // Active horizontal translation finishes before the big end cushion
-        const currentScrolled = -rect.top;
-        const endCushion = 1300;
-        const activeScrollDistance = Math.max(100, totalScrollableDistance - endCushion);
-        const progress = Math.max(0, Math.min(1, currentScrolled / activeScrollDistance));
-
-        const trackWidth = trackRef.current.scrollWidth;
-        const viewportWidth = window.innerWidth || 1200;
-        const maxTranslate = Math.max(0, trackWidth - viewportWidth);
-
-        setHorizontalTranslate(progress * maxTranslate);
-        setScrollProgress(progress);
-        ticking = false;
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Clickable glide arrows for quick navigation
+  // Arrow navigation and pointer drag both use the track's native scroll position.
   const handleNavClick = (direction) => {
-    if (!sectionRef.current || !trackRef.current) return;
-    const viewportHeight = window.innerHeight || 800;
-    const totalScrollableDistance = sectionRef.current.offsetHeight - viewportHeight;
-    const currentScrollTop = window.pageYOffset + sectionRef.current.getBoundingClientRect().top;
-    const step = 450; // scroll ~450px vertically to advance horizontally
+    trackRef.current?.scrollBy({ left: direction === 'next' ? 460 : -460, behavior: 'smooth' });
+  };
 
-    if (direction === 'next') {
-      window.scrollBy({ top: step, behavior: 'smooth' });
-    } else {
-      window.scrollBy({ top: -step, behavior: 'smooth' });
+  const handlePointerDown = (event) => {
+    const track = trackRef.current;
+    if (!track) return;
+    dragRef.current = { active: true, moved: false, startX: event.clientX, startScrollLeft: track.scrollLeft };
+    setIsDragging(true);
+    track.setPointerCapture?.(event.pointerId);
+  };
+
+  const handlePointerMove = (event) => {
+    const track = trackRef.current;
+    if (!track || !dragRef.current.active) return;
+    const distance = event.clientX - dragRef.current.startX;
+    if (Math.abs(distance) > 4) dragRef.current.moved = true;
+    track.scrollLeft = dragRef.current.startScrollLeft - distance;
+  };
+
+  const stopDragging = (event) => {
+    dragRef.current.active = false;
+    setIsDragging(false);
+    if (event?.currentTarget?.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
+  };
+
+  const preventClickAfterDrag = (event) => {
+    if (!dragRef.current.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragRef.current.moved = false;
+  };
+
+  const handleTrackWheel = (event) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const horizontalDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
+      ? event.deltaX
+      : event.deltaY;
+    if (!horizontalDelta) return;
+    event.preventDefault();
+    track.scrollLeft += horizontalDelta;
   };
 
   const projects = initialProjects;
 
   return (
     <div
-      ref={sectionRef}
       className="horizontal-projects-scroll-wrapper"
       style={{
         position: 'relative',
-        height: runwayHeight, // Exactly sized to track length — ZERO empty space!
-        width: '100%'
+        width: '100%',
+        background: '#020716',
+        padding: 'clamp(72px, 10vw, 120px) 0'
       }}
     >
-      {/* Pinned Sticky Viewport (Locks on screen while scrolling down the runway) */}
       <div
-        ref={stickyRef}
         style={{
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
           width: '100%',
-          overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
-          background: '#020716',
           zIndex: 8
         }}
       >
@@ -399,7 +366,7 @@ const ParallaxProjectsShowcase = ({ onSelectProject }) => {
                 margin: 0
               }}
             >
-              WORKS <span style={{ color: '#3AC5A3' }}>×</span> PROJECTS
+              PROJECTS <span style={{ color: '#3AC5A3' }}>×</span> WORKS
             </h2>
           </div>
 
@@ -479,16 +446,30 @@ const ParallaxProjectsShowcase = ({ onSelectProject }) => {
         {/* ── Single Horizontal Row Track ── */}
         <div
           ref={trackRef}
+          data-projects-scroll-track
+          onDragStart={(event) => event.preventDefault()}
+          onWheel={handleTrackWheel}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={stopDragging}
+          onPointerCancel={stopDragging}
+          onClickCapture={preventClickAfterDrag}
           style={{
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'nowrap',
             gap: '32px',
             paddingLeft: 'clamp(24px, 5vw, 60px)',
-            paddingRight: 'clamp(280px, 38vw, 600px)',
-            transform: `translate3d(-${horizontalTranslate}px, 0, 0)`,
-            willChange: 'transform',
-            alignItems: 'stretch'
+            paddingRight: 'clamp(48px, 8vw, 140px)',
+            alignItems: 'stretch',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            scrollBehavior: isDragging ? 'auto' : 'smooth',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#3AC5A3 rgba(58, 197, 163, 0.12)',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            touchAction: 'pan-y',
+            userSelect: 'none'
           }}
         >
           {/* Introductory Card Panel */}

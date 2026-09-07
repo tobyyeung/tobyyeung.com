@@ -11,16 +11,15 @@ const SkillsSection = () => {
 
   return (
     <article id="skills">
-      <div className="parallax-container">
-        <div className="article-heading-col">
+      <div className="parallax-container section-flex-container">
+        <div className="article-heading-col section-sticky-header">
           <span className="article-number">05</span>
           <h1 className="article-heading">
-            SKILLS <strong>&amp;</strong><br />
-            STACK
+            SKILLS
           </h1>
         </div>
 
-        <div className="article-content-col">
+        <div className="article-content-col section-flex-content">
           <div className="skills-categories" role="group" aria-label="Skill categories">
             {Object.keys(skillsData).map(category => (
               <button
@@ -69,7 +68,6 @@ const SkillsSection = () => {
             })}
           </div>
         </div>
-        <div className="skills-clear" />
       </div>
     </article>
   );

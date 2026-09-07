@@ -22,6 +22,7 @@ const Home = () => {
   const [selectedExperience, setSelectedExperience] = useState(null);
   const [detailSource, setDetailSource] = useState(null);
   const [showAllUiucCourses, setShowAllUiucCourses] = useState(false);
+  const [showContactLinks, setShowContactLinks] = useState(false);
 
   // Parallax scroll & mouse tracking
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -141,15 +142,30 @@ const Home = () => {
                 delay={700}
                 speed={32}
               />
-              <p className="article-text">
-                <a
-                  href="mailto:tobycyeung@gmail.com?subject=Hello%20Toby!"
-                  className="glitch-typo"
+              <div className="article-text about-contact">
+                <button
+                  type="button"
+                  onClick={() => setShowContactLinks((visible) => !visible)}
+                  aria-expanded={showContactLinks}
+                  aria-controls="about-contact-links"
+                  className="glitch-typo about-contact-toggle"
                   data-title="Let's talk"
                 >
                   <span>Let's talk →</span>
-                </a>
-              </p>
+                </button>
+                <div id="about-contact-links" className="about-contact-links" hidden={!showContactLinks}>
+                  {[
+                    { name: 'Email', href: 'mailto:tobycyeung@gmail.com', path: 'M3 5h18v14H3z M3 5l9 8 9-8' },
+                    { name: 'LinkedIn', href: 'https://www.linkedin.com/in/yeung-toby/', path: 'M4 9v12 M4 4v.01 M10 21V9h4v2c1-3 7-3 7 3v7 M14 21v-7' },
+                    { name: 'GitHub', href: 'https://github.com/tobyyeung', path: 'M9 21v-3c-4 1-4-2-6-2 M15 21v-4c0-1-.3-2-1-2 4-.5 7-2 7-6 0-2-1-3-2-4 0-1 0-2-.5-3-2 0-3 1-4 2a14 14 0 0 0-7 0C6 3 5 2 3 2c-.5 1-.5 2 0 3-1 1-2 2-2 4 0 4 3 5.5 7 6-.7 0-1 1-1 2v4' },
+                    { name: 'Instagram', href: 'https://www.instagram.com/toby.yeung_/', path: 'M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M17.5 6.5h.01' }
+                  ].map(({ name, href, path }) => (
+                    <a key={name} href={href} aria-label={name} title={name} {...(name !== 'Email' ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                      <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={path} /></svg>
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
             <div style={{ clear: 'both' }} />
           </div>
@@ -187,7 +203,7 @@ const Home = () => {
             <div className="article-heading-col section-sticky-header">
               <span className="article-number">04</span>
               <h1 className="article-heading" style={{ whiteSpace: 'nowrap' }}>
-                EDU<strong>CATION</strong>
+                EDU<strong>CATION ×</strong><br />CERTIFICATES
               </h1>
             </div>
 
@@ -474,7 +490,7 @@ const Home = () => {
         }}>
           <div className="parallax-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             <p style={{ margin: 0 }}>Copyright © 2026 Toby Yeung. All rights reserved.</p>
-            <p style={{ margin: 0 }}>Based in Santa Clara, CA &amp; Champaign, IL</p>
+            <p style={{ margin: 0 }}>Based in the Bay Area &amp; UIUC</p>
           </div>
         </footer>
       </div>

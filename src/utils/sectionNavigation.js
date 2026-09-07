@@ -2,11 +2,13 @@ let cancelPrevious;
 
 // Keep timeline snapping suspended for the full shortcut scroll, including
 // intermediate positions inside its multi-screen runway.
-export function scrollToSectionPosition(top) {
+export function scrollToSectionPosition(top, { interruptible = true, duration } = {}) {
   cancelPrevious?.();
   window.dispatchEvent(new Event('portfolio:section-navigation'));
   const target = Math.max(0, Math.min(top, document.documentElement.scrollHeight - window.innerHeight));
   let frame;
+  let scrollAnimationFrame;
+  let enableInterruptsTimer;
   let finished = false;
   let settled = 0;
   const started = performance.now();
@@ -14,6 +16,8 @@ export function scrollToSectionPosition(top) {
     if (finished) return;
     finished = true;
     cancelAnimationFrame(frame);
+    cancelAnimationFrame(scrollAnimationFrame);
+    window.clearTimeout(enableInterruptsTimer);
     window.removeEventListener('wheel', interrupt);
     window.removeEventListener('touchstart', interrupt);
     window.removeEventListener('keydown', interruptKey);
@@ -29,10 +33,32 @@ export function scrollToSectionPosition(top) {
     if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(event.key)) interrupt();
   };
   cancelPrevious = interrupt;
-  window.addEventListener('wheel', interrupt, { passive: true });
-  window.addEventListener('touchstart', interrupt, { passive: true });
-  window.addEventListener('keydown', interruptKey);
-  window.scrollTo({ top: target, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (duration && !reducedMotion) {
+    const startTop = window.scrollY;
+    const distance = target - startTop;
+    const startedAt = performance.now();
+    const animate = (now) => {
+      const progress = Math.min((now - startedAt) / duration, 1);
+      // Smooth acceleration and a gentle settle at the destination.
+      const eased = 1 - Math.pow(1 - progress, 4);
+      window.scrollTo({ top: startTop + distance * eased, behavior: 'instant' });
+      if (progress < 1) scrollAnimationFrame = requestAnimationFrame(animate);
+    };
+    scrollAnimationFrame = requestAnimationFrame(animate);
+  } else {
+    window.scrollTo({ top: target, behavior: reducedMotion ? 'instant' : 'smooth' });
+  }
+  if (interruptible) {
+    // Register after this triggering wheel event has completed. Registering inside
+    // its handler can cause the same event to cancel the newly started scroll.
+    enableInterruptsTimer = window.setTimeout(() => {
+      if (finished) return;
+      window.addEventListener('wheel', interrupt, { passive: true });
+      window.addEventListener('touchstart', interrupt, { passive: true });
+      window.addEventListener('keydown', interruptKey);
+    }, 0);
+  }
   const check = () => {
     settled = Math.abs(window.scrollY - target) < 2 ? settled + 1 : 0;
     if (settled >= 3 || performance.now() - started > 3000) return finish();

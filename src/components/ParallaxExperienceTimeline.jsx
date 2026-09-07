@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { experiences } from '../data/experiences';
-import TimelineGoogleMap, { LOCATION_COORDS } from './TimelineGoogleMap';
+import TimelineGoogleMap, { LOCATION_COORDS, EXPERIENCE_COLORS } from './TimelineGoogleMap';
 
 // Individual Stepped Experience Card with Silky 3D Mouse Tilt & Smooth Crossfade
 const SteppedExperienceCard = ({ exp, index, activeIndex, onSelect }) => {
@@ -380,6 +380,15 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
   const runwayRef = useRef(null);
   const stickyRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [viewMode, setViewMode] = useState('map');
+  const [timelineSelection, setTimelineSelection] = useState(null);
+  const rememberedExperienceRef = useRef(0);
+  const modeScrollTargetRef = useRef(null);
+  useLayoutEffect(() => {
+    if (modeScrollTargetRef.current === null) return;
+    window.scrollTo({ top: modeScrollTargetRef.current, behavior: 'instant' });
+    modeScrollTargetRef.current = null;
+  }, [viewMode]);
   const [idleExperienceIndex, setIdleExperienceIndex] = useState(null);
   const isTransitioningRef = useRef(false);
   const shortcutNavigationRef = useRef(false);
@@ -419,28 +428,14 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
       minimumLockUntilRef.current = 0;
     };
     const finishShortcutNavigation = () => { shortcutNavigationRef.current = false; };
-    const blockScroll = (event) => {
-      if (!isTransitioningRef.current || event.ctrlKey || event.metaKey) return;
-      if (event.type === 'keydown') {
-        if (event.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
-        if (!['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(event.key)) return;
-      }
-      event.preventDefault();
-    };
-    window.addEventListener('wheel', blockScroll, { passive: false });
-    window.addEventListener('touchmove', blockScroll, { passive: false });
-    window.addEventListener('keydown', blockScroll);
     window.addEventListener('portfolio:section-navigation', cancelNavigationLock);
     window.addEventListener('portfolio:section-navigation-end', finishShortcutNavigation);
     return () => {
       clearTimeout(unlockTimerRef.current);
-      window.removeEventListener('wheel', blockScroll);
-      window.removeEventListener('touchmove', blockScroll);
-      window.removeEventListener('keydown', blockScroll);
       window.removeEventListener('portfolio:section-navigation', cancelNavigationLock);
       window.removeEventListener('portfolio:section-navigation-end', finishShortcutNavigation);
     };
-  }, []);
+  }, [viewMode]);
 
   const totalSteps = experiences.length;
 
@@ -478,27 +473,28 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
 
   // Window scroll handler: maps vertical position inside runway to exact experience step
   useEffect(() => {
+    if (viewMode === 'timeline') return;
     let ticking = false;
 
     const handleScroll = () => {
       if (shortcutNavigationRef.current) return;
-      if (isTransitioningRef.current && lockPositionRef.current !== null) {
-        if (Math.abs(window.scrollY - lockPositionRef.current) > 1) {
-          window.scrollTo({ top: lockPositionRef.current, behavior: 'instant' });
-        }
-        return;
-      }
+      // Keep the current camera destination while letting the document move.
+      if (isTransitioningRef.current || flightBusyRef.current) return;
       if (!runwayRef.current || ticking) return;
       ticking = true;
 
       requestAnimationFrame(() => {
-        if (!runwayRef.current || isTransitioningRef.current || shortcutNavigationRef.current) {
+        if (!runwayRef.current || isTransitioningRef.current || flightBusyRef.current || shortcutNavigationRef.current) {
           ticking = false;
           return;
         }
 
         const rect = runwayRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight || 800;
+        if (rect.bottom <= 0 || rect.top >= viewportHeight) {
+          ticking = false;
+          return;
+        }
         const totalDistance = runwayRef.current.offsetHeight - viewportHeight;
 
         if (totalDistance <= 0) {
@@ -524,14 +520,16 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [totalSteps, activeIndex, beginLock]);
+  }, [totalSteps, activeIndex, beginLock, viewMode]);
 
   // Wheel event interceptor: snaps exactly ONE experience per wheel flick
   useEffect(() => {
+    if (viewMode === 'timeline') return;
     const el = stickyRef.current;
     if (!el) return;
 
     const onWheel = (e) => {
+      if (e.defaultPrevented) return;
       if (shortcutNavigationRef.current) return;
       if (!runwayRef.current) return;
       const rect = runwayRef.current.getBoundingClientRect();
@@ -544,9 +542,8 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
       const delta = e.deltaY;
       if (Math.abs(delta) < 25) return; // ignore subtle trackpad jitter
 
-      // Cooldown to prevent multi-skipping during one flick
-      if (isTransitioningRef.current) {
-        e.preventDefault();
+      // Further wheel input scrolls the page while the camera finishes flying.
+      if (isTransitioningRef.current || flightBusyRef.current) {
         return;
       }
 
@@ -582,7 +579,7 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
 
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [activeIndex, totalSteps, beginLock]);
+  }, [activeIndex, totalSteps, beginLock, viewMode]);
 
   // Jump to specific experience step (buttons / bullets)
   const jumpToStep = (index) => {
@@ -608,13 +605,20 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
     return () => clearTimeout(timer);
   }, [activeExp.id]);
 
+  const selectTimelineExperience = (index) => {
+    if (index >= 0 && index < experiences.length) {
+      rememberedExperienceRef.current = index;
+      setTimelineSelection(experiences[index].id);
+    }
+  };
+
   return (
     <div
       ref={runwayRef}
       className="experience-stepped-runway"
       style={{
         position: 'relative',
-        height: `${totalSteps * 100}vh`, // Exactly 1 viewport height runway per experience
+        height: viewMode === 'timeline' ? '100vh' : `${totalSteps * 100}vh`,
         width: '100%'
       }}
     >
@@ -634,9 +638,12 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
       >
         {/* ── Full-Bleed Google Maps Background ── */}
         <TimelineGoogleMap
-          activeExpId={debouncedExpId}
+          activeExpId={viewMode === 'timeline' ? timelineSelection : debouncedExpId}
+          onOverview={() => setTimelineSelection(null)}
           onFlightChange={onFlightChange}
-          onSelectExperience={onSelectExperience}
+          timelineMode={viewMode === 'timeline'}
+          onOpenDetails={onSelectExperience}
+          onSelectExperience={(experience) => selectTimelineExperience(experiences.findIndex((item) => item.id === experience.id))}
         />
 
         {/* ── Blurry Gradient Blend (Hi I'm Toby Section ↔ Map) ── */}
@@ -701,8 +708,78 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
               {activeIndex + 1} / {totalSteps}
             </span>
           </div>
+          <div
+            role="group"
+            aria-label="Experience view"
+            style={{ display: 'flex', padding: '4px', gap: '3px', border: '1px solid rgba(148, 222, 208, 0.32)', borderRadius: '999px', background: 'rgba(2, 7, 22, 0.52)', backdropFilter: 'blur(12px)', pointerEvents: 'auto' }}
+          >
+            {['map', 'timeline'].map((mode) => (
+              <button
+                type="button"
+                key={mode}
+                onClick={() => {
+                  if (mode === viewMode) return;
+                  if (mode === 'timeline') rememberedExperienceRef.current = activeIndex;
+                  const destinationIndex = rememberedExperienceRef.current;
+                  if (mode === 'map') {
+                    setActiveIndex(destinationIndex);
+                    setDebouncedExpId(experiences[destinationIndex].id);
+                  }
+                  const runwayTop = runwayRef.current.getBoundingClientRect().top + window.scrollY;
+                  // The map has a multi-screen sticky runway; the list has one
+                  // screen. Re-anchor before paint when that runway changes.
+                  modeScrollTargetRef.current = runwayTop + (mode === 'map' ? destinationIndex * window.innerHeight : 0);
+                  clearTimeout(unlockTimerRef.current);
+                  isTransitioningRef.current = false;
+                  lockPositionRef.current = null;
+                  minimumLockUntilRef.current = 0;
+                  setTimelineSelection(null);
+                  setViewMode(mode);
+                }}
+                aria-pressed={viewMode === mode}
+                style={{ border: 0, borderRadius: '999px', padding: '7px 13px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.72rem', fontWeight: '700', color: viewMode === mode ? '#021022' : '#b6c7cd', background: viewMode === mode ? '#73e1cc' : 'transparent', transition: 'all 180ms ease' }}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {viewMode === 'timeline' ? (
+          <aside
+            className="experience-explorer-list"
+            aria-label="Experience timeline"
+            style={{ position: 'absolute', top: '92px', right: 0, bottom: 0, width: '34%', overflowY: 'auto', padding: '18px clamp(14px, 1.5vw, 24px) 42px', background: 'linear-gradient(90deg, rgba(2,7,22,0.94), rgba(6,16,33,0.98))', zIndex: 15 }}
+          >
+            <div className="experience-alternating-timeline">
+            {experiences.map((experience, index) => {
+              const selected = experience.id === timelineSelection;
+              const location = LOCATION_COORDS[experience.id];
+              return (
+                <button
+                  type="button"
+                  className={`experience-explorer-card${selected ? ' is-selected' : ''}`}
+                  aria-pressed={selected}
+                  key={experience.id}
+                  onClick={() => selectTimelineExperience(index)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', marginBottom: '12px', padding: '16px', cursor: 'pointer', color: '#fff', background: selected ? 'rgba(58, 197, 163, 0.16)' : 'rgba(255,255,255,0.035)', border: `1px solid ${selected ? '#3AC5A3' : 'rgba(139, 183, 194, 0.19)'}`, borderRadius: '12px', boxShadow: selected ? '0 0 24px rgba(58,197,163,0.14)' : 'none', transition: 'all 180ms ease' }}
+                >
+                  <img className="experience-row-logo" src={experience.logo} alt="" style={{ outline: `2px solid ${EXPERIENCE_COLORS[experience.id]}`, outlineOffset: '2px' }} />
+                  <span className="experience-row-details">
+                  <span className="experience-row-title"><strong>{experience.role}</strong> <span>@ {experience.title}</span></span>
+                  <span className="experience-row-meta">
+                    <span className="experience-row-date">{experience.dateStr}</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="experience-row-location">{location?.city}</span>
+                  </span>
+                  </span>
+                </button>
+              );
+            })}
+            </div>
+          </aside>
+        ) : (
+        <>
         {/* ── Main Stage: Central Spine & Exactly 1 Highlighted Experience (Exact 50vh alignment with map) ── */}
         <div
           className="timeline-overlay-stage"
@@ -813,6 +890,8 @@ const ParallaxExperienceTimeline = ({ onSelectExperience }) => {
             />
           ))}
         </div>
+        </>
+        )}
       </div>
     </div>
   );

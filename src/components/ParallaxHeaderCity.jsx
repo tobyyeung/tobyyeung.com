@@ -29,10 +29,19 @@ const HERO_PHOTOS = [
   'images/hero-guitar.png',
 ];
 
+const HERO_STATEMENTS = [
+  'Building practical AI and full-stack systems for real people.',
+  'I build software that moves ideas forward.',
+  'Software engineer building useful things with AI, data, and intent.',
+];
+
 const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isPhotoGlitching, setIsPhotoGlitching] = useState(false);
   const photoSwapTimeoutRef = useRef(null);
+  const [statementIndex, setStatementIndex] = useState(0);
+  const [typedStatement, setTypedStatement] = useState('');
+  const [isDeletingStatement, setIsDeletingStatement] = useState(false);
 
   useEffect(() => {
     const chooseDifferentPhoto = () => {
@@ -55,6 +64,36 @@ const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }
       window.clearTimeout(photoSwapTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    const statement = HERO_STATEMENTS[statementIndex];
+    let delay;
+
+    if (!isDeletingStatement && typedStatement.length < statement.length) {
+      delay = 30;
+    } else if (!isDeletingStatement) {
+      delay = 1800;
+    } else if (typedStatement.length > 0) {
+      delay = 16;
+    } else {
+      delay = 260;
+    }
+
+    const timerId = window.setTimeout(() => {
+      if (!isDeletingStatement && typedStatement.length < statement.length) {
+        setTypedStatement(statement.slice(0, typedStatement.length + 1));
+      } else if (!isDeletingStatement) {
+        setIsDeletingStatement(true);
+      } else if (typedStatement.length > 0) {
+        setTypedStatement(statement.slice(0, typedStatement.length - 1));
+      } else {
+        setIsDeletingStatement(false);
+        setStatementIndex((currentIndex) => (currentIndex + 1) % HERO_STATEMENTS.length);
+      }
+    }, delay);
+
+    return () => window.clearTimeout(timerId);
+  }, [isDeletingStatement, statementIndex, typedStatement]);
 
   // Parallax translation factors for different depth layers
   // Layer 1 (closest, moves fastest) to Layer 5/Back (farthest, moves slowest)
@@ -116,8 +155,8 @@ const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }
           <div className="hero-copy">
             <p className="hero-kicker">Portfolio / 2026</p>
             <h1 className="parallax-title-main">Toby<br />Yeung</h1>
-            <p className="parallax-title-sub">
-              I build thoughtful software systems where AI, data, and people meet.
+            <p className="parallax-title-sub hero-typewriter" aria-live="polite">
+              {typedStatement}<span className="hero-typewriter-caret" aria-hidden="true">|</span>
             </p>
             <div className="parallax-title-tags">
               <span className="parallax-tag">CS + Economics · UIUC</span>
@@ -126,7 +165,7 @@ const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }
           </div>
           <figure className={`hero-portrait${isPhotoGlitching ? ' is-glitching' : ''}`}>
             <img src={`${import.meta.env.BASE_URL}${HERO_PHOTOS[photoIndex]}`} alt="Toby Yeung" />
-            <figcaption>Based between Champaign, IL &amp; Santa Clara, CA</figcaption>
+            <figcaption>Based between UIUC &amp; the Bay Area</figcaption>
           </figure>
         </div>
       </div>
