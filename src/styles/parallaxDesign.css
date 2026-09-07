@@ -173,7 +173,10 @@
   top: 0;
   width: 100%;
   height: 100vh;
-  background: radial-gradient(circle at 50% 30%, #071329 0%, #030816 70%, #020716 100%);
+  background:
+    radial-gradient(circle at 78% 26%, rgba(218, 101, 50, 0.18), transparent 28%),
+    radial-gradient(circle at 18% 78%, rgba(58, 197, 163, 0.12), transparent 34%),
+    #07101f;
   overflow: hidden;
   z-index: 5;
   pointer-events: none;
@@ -195,7 +198,7 @@
 .parallax-header-title {
   position: absolute;
   left: 0;
-  top: 36%;
+  top: 50%;
   width: 100%;
   text-align: center;
   z-index: 3;
@@ -204,47 +207,132 @@
 }
 
 .parallax-title-main {
-  font-family: 'Oswald', 'Outfit', sans-serif;
-  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(4rem, 8vw, 7.5rem);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: -0.06em;
+  text-transform: none;
   color: #ffffff;
   margin: 0;
   line-height: 1;
-  text-shadow: 0 0 30px rgba(58, 197, 163, 0.4);
+  text-shadow: none;
 }
 
 .parallax-title-sub {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(0.9rem, 2vw, 1.25rem);
-  font-weight: 500;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: #3AC5A3;
-  margin-top: 0.75rem;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.76);
+  margin-top: 1.35rem;
+  line-height: 1.55;
   opacity: 0.95;
+}
+
+.hero-intro {
+  width: min(1120px, calc(100% - 4rem));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(250px, 0.65fr);
+  align-items: center;
+  gap: clamp(2rem, 7vw, 7rem);
+  text-align: left;
+}
+
+.hero-copy { max-width: 650px; }
+
+.hero-kicker {
+  color: #e37d45;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 1.1rem;
+}
+
+.hero-portrait { margin: 0; position: relative; }
+
+.hero-portrait img {
+  display: block;
+  width: 100%;
+  max-width: 330px;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: 50% 25%;
+  filter: grayscale(100%) contrast(1.08);
+  border: 1px solid rgba(227, 125, 69, 0.7);
+  padding: 8px;
+  background: #07101f;
+}
+
+.hero-portrait.is-glitching {
+  animation: portrait-glitch 210ms steps(2, end) both;
+}
+
+.hero-portrait.is-glitching::before,
+.hero-portrait.is-glitching::after {
+  content: '';
+  position: absolute;
+  inset: 8px 0 auto 8px;
+  height: 32%;
+  width: calc(100% - 8px);
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+
+.hero-portrait.is-glitching::before {
+  background: rgba(58, 197, 163, 0.62);
+  transform: translateX(-10px);
+  clip-path: inset(12% 0 54% 0);
+}
+
+.hero-portrait.is-glitching::after {
+  background: rgba(227, 125, 69, 0.6);
+  transform: translateX(12px);
+  clip-path: inset(48% 0 14% 0);
+}
+
+@keyframes portrait-glitch {
+  0% { filter: contrast(1); transform: translate(0); }
+  20% { filter: contrast(1.4) saturate(1.6); transform: translate(-7px, 2px); }
+  45% { transform: translate(8px, -3px); }
+  70% { filter: contrast(1.3) saturate(1.4); transform: translate(-3px, 3px); }
+  100% { filter: contrast(1); transform: translate(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-portrait.is-glitching { animation: none; }
+  .hero-portrait.is-glitching::before,
+  .hero-portrait.is-glitching::after { display: none; }
+}
+
+.hero-portrait figcaption {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  margin-top: 0.65rem;
+  text-transform: uppercase;
 }
 
 .parallax-title-tags {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.75rem;
   margin-top: 1.25rem;
   flex-wrap: wrap;
 }
 
 .parallax-tag {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(10, 25, 47, 0.75);
-  border: 1px solid rgba(58, 197, 163, 0.35);
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.76);
+  border-bottom: 1px solid rgba(227, 125, 69, 0.72);
+  padding: 0 0 0.35rem;
 }
 
 /* Stars */
@@ -255,11 +343,7 @@
 }
 
 .star-geo {
-  position: absolute;
-  background: #3AC5A3;
-  opacity: 0.6;
-  border-radius: 2px;
-  animation: star-twinkle 4s infinite ease-in-out alternate;
+  display: none;
 }
 
 @keyframes star-twinkle {
@@ -282,10 +366,7 @@
 
 /* Shooting Stars */
 .shooting-stars {
-  position: absolute;
-  inset: 0;
-  transform: rotateZ(28deg);
-  pointer-events: none;
+  display: none;
 }
 
 .shooting-star {
@@ -1272,6 +1353,25 @@
 }
 
 @media screen and (max-width: 768px) {
+  .hero-intro {
+    width: min(100% - 2.5rem, 520px);
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+  }
+
+  .parallax-header-title { top: 46%; }
+
+  .parallax-title-main { font-size: clamp(3.8rem, 17vw, 5.5rem); }
+
+  .hero-portrait {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.8rem;
+  }
+
+  .hero-portrait img { width: 116px; padding: 4px; }
+  .hero-portrait figcaption { max-width: 180px; margin: 0 0 0.4rem; }
+
   .parallax-projects-grid-2col {
     grid-template-columns: 1fr !important;
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Geometric star positions across the canvas
 const STARS = [
@@ -22,7 +22,40 @@ const SHOOTING_STARS = [
   { top: '50%', left: '10%', delay: '5s' },
 ];
 
+const HERO_PHOTOS = [
+  'images/self.jpg',
+  'images/hero-train.png',
+  'images/hero-totoro.png',
+  'images/hero-guitar.png',
+];
+
 const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }) => {
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [isPhotoGlitching, setIsPhotoGlitching] = useState(false);
+  const photoSwapTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const chooseDifferentPhoto = () => {
+      setIsPhotoGlitching(true);
+
+      photoSwapTimeoutRef.current = window.setTimeout(() => {
+        setPhotoIndex((currentIndex) => {
+          const candidates = HERO_PHOTOS
+            .map((_, index) => index)
+            .filter((index) => index !== currentIndex);
+          return candidates[Math.floor(Math.random() * candidates.length)];
+        });
+        setIsPhotoGlitching(false);
+      }, 210);
+    };
+
+    const intervalId = window.setInterval(chooseDifferentPhoto, 5200);
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(photoSwapTimeoutRef.current);
+    };
+  }, []);
+
   // Parallax translation factors for different depth layers
   // Layer 1 (closest, moves fastest) to Layer 5/Back (farthest, moves slowest)
   const titleY = scrollProgress * 300;
@@ -71,7 +104,7 @@ const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }
         ))}
       </div>
 
-      {/* Hero Title with Chromatic Glitch effect */}
+      {/* Hero introduction: more like an editorial cover than a stock tech landing page. */}
       <div
         className="parallax-header-title"
         style={{
@@ -79,15 +112,22 @@ const ParallaxHeaderCity = ({ scrollProgress = 0, mouseOffset = { x: 0, y: 0 } }
           opacity: titleOpacity
         }}
       >
-        <h1 className="parallax-title-main">
-          Toby Yeung
-        </h1>
-        <div className="parallax-title-sub">
-          Full Stack &amp; AI Systems Engineer
-        </div>
-        <div className="parallax-title-tags">
-          <span className="parallax-tag">CS &amp; Economics @ UIUC</span>
-          <span className="parallax-tag">AI Researcher @ INVITE Institute</span>
+        <div className="hero-intro">
+          <div className="hero-copy">
+            <p className="hero-kicker">Portfolio / 2026</p>
+            <h1 className="parallax-title-main">Toby<br />Yeung</h1>
+            <p className="parallax-title-sub">
+              I build thoughtful software systems where AI, data, and people meet.
+            </p>
+            <div className="parallax-title-tags">
+              <span className="parallax-tag">CS + Economics · UIUC</span>
+              <span className="parallax-tag">Currently: AI research at INVITE</span>
+            </div>
+          </div>
+          <figure className={`hero-portrait${isPhotoGlitching ? ' is-glitching' : ''}`}>
+            <img src={`${import.meta.env.BASE_URL}${HERO_PHOTOS[photoIndex]}`} alt="Toby Yeung" />
+            <figcaption>Based between Champaign, IL &amp; Santa Clara, CA</figcaption>
+          </figure>
         </div>
       </div>
 

@@ -105,12 +105,12 @@ const Home = () => {
 
             <div className="article-content-col">
               <CyberDecryptText
-                text="Computer Science and Economics student at UIUC with a 4.0 GPA, seeking a Summer 2026 Software Engineer internship."
+                text="Computer Science and Economics student at UIUC with a 4.0 GPA, seeking a Summer 2027 Software Engineer internship."
                 highlights={[
                   { text: 'Computer Science and Economics', className: 'strong' },
                   { text: 'UIUC', className: 'strong' },
                   { text: '4.0 GPA', className: 'highlight' },
-                  { text: 'Summer 2026 Software Engineer internship', className: 'highlight' }
+                  { text: 'Summer 2027 Software Engineer internship', className: 'highlight' }
                 ]}
                 delay={200}
                 speed={32}
