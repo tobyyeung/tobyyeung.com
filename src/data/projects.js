@@ -10,7 +10,7 @@ export const initialProjects = [
       { keywords: "Natural-language scheduling", text: "Integrated chrono-node to turn typed dates and times into calendar-ready task schedules." }
     ],
     technologies: ["Electron", "TypeScript", "JavaScript", "Firebase Firestore", "Google Calendar API", "OAuth 2.0 PKCE", "chrono-node", "IPC", "REST APIs"],
-    websiteUrl: "https://tasks.tobyyeung.com",
+    websiteUrl: "https://tasks.tobyyeung.com/download",
     githubUrl: "https://github.com/tobyyeung/tachotasks",
     imageUrl: import.meta.env.BASE_URL + "images/projects/tacho.png"
   },
